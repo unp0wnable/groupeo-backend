@@ -1,0 +1,46 @@
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: error
+
+spring:
+  datasource:
+    url: @dataSource.url@
+    username: @dataSource.user@
+    password: @dataSource.password@
+    tomcat:
+      max-active: 8
+      max-idle: 2
+      max-wait: 5000
+      remove-abandoned: true
+      remove-abandoned-timeout: 30
+      log-abandoned: true
+      validation-query: SELECT 1
+  devtools:
+    restart:
+      trigger-file: reload
+    livereload:
+      enabled: true
+  jackson:
+    default-property-inclusion: NON_NULL
+  jpa:
+    database: POSTGRESQL
+    show-sql: false
+    hibernate:
+      use-sql-comments: true
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      format-sql: true
+      ddl-auto: none
+
+
+server:
+  servlet:
+    context-path: @project.contextPath@
+
+project:
+  jwt:
+    signKey: Bu:GW8bgPlEw
+    expirationMinutes: 2880   # 2 days (60 * 24 * 2)
