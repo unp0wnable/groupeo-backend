@@ -11,21 +11,11 @@ DROP TABLE IF EXISTS AssistanceStatusCode;
 DROP TABLE IF EXISTS Meeting;
 DROP TABLE IF EXISTS Place;
 DROP TABLE IF EXISTS PlaceAddress;
-DROP TABLE IF EXISTS UserProfile;
 DROP TABLE IF EXISTS UserAddress;
+DROP TABLE IF EXISTS UserProfile;
 
 /* ******************** CREATE TABLES ******************** */
 /* *************** ACCOUNTS *************** */
-CREATE TABLE UserAddress (
-    userAddressID   UUID            DEFAULT uuid_generate_v4(),
-    city            VARCHAR(50),
-    region          VARCHAR(50),
-    postalCode      VARCHAR(10),
-    country         VARCHAR(50),
-
-    CONSTRAINT PK_UserAddress PRIMARY KEY (userAddressID)
-);
-
 CREATE TABLE UserProfile (
     userProfileID UUID          DEFAULT uuid_generate_v4(),
     firstName     VARCHAR(30)   NOT NULL,
@@ -42,12 +32,23 @@ CREATE TABLE UserProfile (
     userAddressID UUID,
 
     CONSTRAINT PK_UserProfile PRIMARY KEY (userProfileID),
-    CONSTRAINT FK_UserProfile_TO_UserAddress FOREIGN KEY (userAddressID)
-        REFERENCES UserAddress(userAddressID)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE,
     CONSTRAINT UNIQUE_UserProfile_email UNIQUE (email),
     CONSTRAINT UNIQUE_UserProfile_nickName UNIQUE (nickName)
+);
+
+CREATE TABLE UserAddress (
+    userAddressID   UUID            DEFAULT uuid_generate_v4(),
+    city            VARCHAR(50),
+    region          VARCHAR(50),
+    postalCode      VARCHAR(10),
+    country         VARCHAR(50),
+    userProfileID   UUID    NOT NULL,
+
+    CONSTRAINT PK_UserAddress PRIMARY KEY (userAddressID),
+    CONSTRAINT FK_UserAddress_TO_UserProfile FOREIGN KEY (userProfileID)
+        REFERENCES UserProfile(userProfileID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE UserGroup (

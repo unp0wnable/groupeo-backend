@@ -37,4 +37,8 @@ public class UserAddress {
     
     @Column(name = "country", length = 50)
     private String country;
+    
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true, optional = false)
+    @JoinColumn(name = "userProfileID")
+    private UserProfile userProfile;
 }

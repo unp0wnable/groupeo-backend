@@ -56,8 +56,4 @@ public class UserProfile {
     
     @Column(name = "score")
     private Float score;
-    
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST, orphanRemoval = true)
-    @JoinColumn(name = "userAddressID")
-    private UserAddress userAddress;
 }
