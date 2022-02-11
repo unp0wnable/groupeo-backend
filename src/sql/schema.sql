@@ -21,7 +21,7 @@ CREATE TABLE UserProfile (
     firstName     VARCHAR(30)   NOT NULL,
     surname1      VARCHAR(50),
     surname2      VARCHAR(50),
-    email         VARCHAR(50)   NOT NULL,
+    email         VARCHAR(100)  NOT NULL,
     birthDate     DATE          NOT NULL,
     joinDate      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     description   VARCHAR,

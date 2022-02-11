@@ -18,10 +18,10 @@ import java.util.UUID;
 @Table(name = "UserProfile")
 public class UserProfile {
     @Id
-    @Column(name = "userProfileID", nullable = false)
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "uuid-char")
+    @Column(name = "userProfileID", nullable = false)
     private UUID userProfileID;
     
     @Column(name = "firstName", length = 30, nullable = false)
@@ -33,7 +33,7 @@ public class UserProfile {
     @Column(name = "surname2", length = 50)
     private String surname2;
     
-    @Column(name = "email", length = 50, nullable = false, unique = true)
+    @Column(name = "email", length = 100, nullable = false, unique = true)
     private String email;
     
     @Column(name = "birthDate", nullable = false)
@@ -51,8 +51,9 @@ public class UserProfile {
     @Column(name = "password", nullable = false)
     private String password;
     
+    @Lob
     @Column(name = "avatarPath")
-    private String avatarPath;
+    private String imageB64;
     
     @Column(name = "score")
     private Float score;
