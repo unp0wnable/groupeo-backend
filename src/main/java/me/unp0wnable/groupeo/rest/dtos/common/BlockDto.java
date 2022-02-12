@@ -9,7 +9,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BlockDTO<T> {
+public class BlockDto<T> {
     @NotNull
     private List<T> items;
     

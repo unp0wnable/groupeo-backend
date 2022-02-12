@@ -5,6 +5,7 @@ import me.unp0wnable.groupeo.model.entities.UserProfile;
 import me.unp0wnable.groupeo.model.exceptions.*;
 import me.unp0wnable.groupeo.model.services.UserService;
 import me.unp0wnable.groupeo.rest.dtos.conversors.UserConversor;
+import me.unp0wnable.groupeo.rest.dtos.errors.ErrorsDto;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
 import me.unp0wnable.groupeo.rest.exceptions.PermissionException;
 import me.unp0wnable.groupeo.rest.http.jwt.JwtData;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Locale;
 import java.util.UUID;
 
 @RestController
@@ -30,6 +32,31 @@ public class UserController {
     MessageSource messageSource;
     
     /* ********************************************* EXCEPTION HANDLERS ********************************************* */
+    private final static String INCORRECT_LOGIN_EXCEPTION_KEY = "project.exceptions.IncorrectLoginException";
+    private final static String INCORRECT_PASSWORD_EXCEPTION_KEY = "project.exceptions.IncorrectPasswordException";
+    
+    
+    @ExceptionHandler(IncorrectLoginException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorsDto handleIncorrectLoginException(IncorrectLoginException exception, Locale locale) {
+        String errorMessage = messageSource.getMessage(
+                INCORRECT_LOGIN_EXCEPTION_KEY, null, INCORRECT_LOGIN_EXCEPTION_KEY, locale
+        );
+    
+        return new ErrorsDto(errorMessage);
+    }
+    
+    @ExceptionHandler(IncorrectPasswordExcepion.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorsDto handleIncorrectPasswordException(IncorrectPasswordExcepion exception, Locale locale) {
+        String errorMessage = messageSource.getMessage(
+                INCORRECT_PASSWORD_EXCEPTION_KEY, null, INCORRECT_PASSWORD_EXCEPTION_KEY, locale
+        );
+        
+        return new ErrorsDto(errorMessage);
+    }
     
     
     /* ************************************************* ENDPOINTS ************************************************* */
@@ -100,7 +127,7 @@ public class UserController {
     
     
     @PutMapping("/{userID}/update")
-    public UserDTO updateProfile(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
+    public UserDto updateProfile(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
                                 @Validated @RequestBody UpdateProfileParamsDto params)
             throws PermissionException, InstanceNotFoundException {
         // Comprobar que el usuario actual es quién dice ser
@@ -113,15 +140,15 @@ public class UserController {
         UserProfile updatedUser = userService.updateUserProfile(userID, userData);
         
         // Generar respuesta
-        UserDTO dto = UserConversor.toUserDto(updatedUser);
+        UserDto dto = UserConversor.toUserDto(updatedUser);
         
         return dto;
     }
     
     
     @PutMapping("/{userID}/updateAddress")
-    public AddressDTO updateUserAddress(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
-                                        @Validated @RequestBody AddressDTO params)
+    public AddressDto updateUserAddress(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
+                                        @Validated @RequestBody AddressDto params)
             throws PermissionException, InstanceNotFoundException {
         // Comprobar que el usuario actual es quién dice ser
         if (!doUsersMatch(userID, pathUserID)) {
@@ -133,7 +160,7 @@ public class UserController {
         UserAddress updatedAddress = userService.updateUserAddress(userID, address);
     
         // Generar respuesta
-        AddressDTO dto = UserConversor.toAddressDto(updatedAddress);
+        AddressDto dto = UserConversor.toAddressDto(updatedAddress);
     
         return dto;
     }

@@ -9,7 +9,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressDTO {
+public class AddressDto {
     private UUID addressID;
     
     @Size(min = 1, max = 50)

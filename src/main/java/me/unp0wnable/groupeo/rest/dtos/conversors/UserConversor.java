@@ -11,8 +11,8 @@ import java.sql.Date;
 @NoArgsConstructor
 public class UserConversor {
     /* ******************** Convertir a DTO ******************** */
-    public static UserDTO toUserDto(UserProfile user) {
-        UserDTO dto = new UserDTO(
+    public static UserDto toUserDto(UserProfile user) {
+        UserDto dto = new UserDto(
                 user.getUserProfileID(),
                 user.getFirstName(),
                 user.getSurname1(),
@@ -33,8 +33,8 @@ public class UserConversor {
         return dto;
     }
     
-    public static AddressDTO toAddressDto(UserAddress address) {
-        AddressDTO dto = new AddressDTO();
+    public static AddressDto toAddressDto(UserAddress address) {
+        AddressDto dto = new AddressDto();
         dto.setCity(address.getCity());
         dto.setCountry(address.getCountry());
         dto.setRegion(address.getRegion());
@@ -50,7 +50,7 @@ public class UserConversor {
     
 
     /* ******************** Convertir a Entidades ******************** */
-    public static UserProfile fromUserDTO(UserDTO dto) {
+    public static UserProfile fromUserDTO(UserDto dto) {
         UserProfile user = new UserProfile();
         user.setUserProfileID(dto.getUserID());
         user.setFirstName(dto.getFirstName());
@@ -93,7 +93,7 @@ public class UserConversor {
         return user;
     }
     
-    public static UserAddress fromAddressDTO(AddressDTO dto) {
+    public static UserAddress fromAddressDTO(AddressDto dto) {
         UserAddress address = new UserAddress();
         address.setCity(dto.getCity());
         address.setCountry(dto.getCountry());

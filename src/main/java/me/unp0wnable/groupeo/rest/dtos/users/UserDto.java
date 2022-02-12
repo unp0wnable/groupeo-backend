@@ -9,7 +9,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class UserDTO {
+public class UserDto {
     private UUID userID;
     
     @Size(min = 1, max = 50)
@@ -42,7 +42,7 @@ public class UserDTO {
     private String role;
     
     /** Constuctor sin <c>password</c> */
-    public UserDTO(UUID userID, String firstName, String surname1, String surname2, String email, Date birthDate,
+    public UserDto(UUID userID, String firstName, String surname1, String surname2, String email, Date birthDate,
             Date joinDate, String description, String nickName, String imageB64, Float score, String role) {
         this.userID = userID;
         this.firstName = firstName;
@@ -59,7 +59,7 @@ public class UserDTO {
     }
     
     /** Constuctor sin <c>password, imageB64</c> */
-    public UserDTO(UUID userID, String firstName, String surname1, String surname2, String email, Date birthDate,
+    public UserDto(UUID userID, String firstName, String surname1, String surname2, String email, Date birthDate,
             Date joinDate, String description, String nickName, Float score,  String role) {
         this.userID = userID;
         this.firstName = firstName;

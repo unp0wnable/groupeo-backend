@@ -11,5 +11,5 @@ public class AuthenticatedUserDto {
     private String serviceToken;
     
     @JsonProperty("user")
-    private UserDTO userDTO;
+    private UserDto userDTO;
 }
