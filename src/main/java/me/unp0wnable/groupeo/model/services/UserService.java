@@ -2,16 +2,13 @@ package me.unp0wnable.groupeo.model.services;
 
 import me.unp0wnable.groupeo.model.entities.UserAddress;
 import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.model.exceptions.IncorrectLoginException;
-import me.unp0wnable.groupeo.model.exceptions.IncorrectPasswordExcepion;
-import me.unp0wnable.groupeo.model.exceptions.InstanceAlreadyExistsException;
-import me.unp0wnable.groupeo.model.exceptions.InstanceNotFoundException;
+import me.unp0wnable.groupeo.model.exceptions.*;
 
 import java.util.UUID;
 
 public interface UserService {
 
-    void signUp(UserProfile profile, UserAddress address) throws InstanceAlreadyExistsException;
+    void signUp(UserProfile profile) throws InstanceAlreadyExistsException;
     
     UserProfile login(String nickName, String rawPassword) throws IncorrectLoginException;
     

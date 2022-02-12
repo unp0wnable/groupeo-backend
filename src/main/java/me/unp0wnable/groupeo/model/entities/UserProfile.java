@@ -17,6 +17,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "UserProfile")
 public class UserProfile {
+    public enum UserRoles {ADMIN, USER}
+    
+    
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
@@ -57,4 +60,7 @@ public class UserProfile {
     
     @Column(name = "score")
     private Float score;
+    
+    @Column(name = "role")
+    private UserRoles role;
 }

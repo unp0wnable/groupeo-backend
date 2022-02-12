@@ -1,11 +1,10 @@
 package me.unp0wnable.groupeo.rest.dtos.conversors;
 
 import lombok.NoArgsConstructor;
+import me.unp0wnable.groupeo.model.entities.UserAddress;
 import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.rest.dtos.users.AuthenticatedUserDto;
-import me.unp0wnable.groupeo.rest.dtos.users.SignUpParamsDto;
-import me.unp0wnable.groupeo.rest.dtos.users.UpdateProfileParamsDTO;
-import me.unp0wnable.groupeo.rest.dtos.users.UserDTO;
+import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
+import me.unp0wnable.groupeo.rest.dtos.users.*;
 
 import java.sql.Date;
 
@@ -23,12 +22,24 @@ public class UserConversor {
                 user.getJoinDate(),
                 user.getDescription(),
                 user.getNickName(),
-                user.getScore()
+                user.getScore(),
+                user.getRole().toString()
         );
         
         // Agrega valores optativos si están disponibles
         if (user.getImageB64() != null) dto.setImageB64(user.getImageB64());
         
+        
+        return dto;
+    }
+    
+    public static AddressDTO toAddressDto(UserAddress address) {
+        AddressDTO dto = new AddressDTO();
+        dto.setCity(address.getCity());
+        dto.setCountry(address.getCountry());
+        dto.setRegion(address.getRegion());
+        dto.setPostalCode(address.getPostalCode());
+        dto.setAddressID(address.getUserAddressID());
         
         return dto;
     }
@@ -51,6 +62,7 @@ public class UserConversor {
         user.setDescription(dto.getDescription());
         user.setNickName(dto.getNickName());
         user.setScore(dto.getScore());
+        user.setRole(UserRoles.valueOf(dto.getRole()));
     
         // Agrega valores optativos si están disponibles
         if (dto.getImageB64() != null) user.setImageB64(user.getImageB64());
@@ -72,12 +84,22 @@ public class UserConversor {
         return user;
     }
     
-    public static UserProfile fromUpdateProfileParamsDTO(UpdateProfileParamsDTO dto) {
+    public static UserProfile fromUpdateProfileParamsDTO(UpdateProfileParamsDto dto) {
         UserProfile user = new UserProfile();
         user.setNickName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());
      
         return user;
+    }
+    
+    public static UserAddress fromAddressDTO(AddressDTO dto) {
+        UserAddress address = new UserAddress();
+        address.setCity(dto.getCity());
+        address.setCountry(dto.getCountry());
+        address.setPostalCode(dto.getPostalCode());
+        address.setRegion(dto.getRegion());
+        
+        return address;
     }
 }

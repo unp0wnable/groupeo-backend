@@ -1,9 +1,6 @@
 package me.unp0wnable.groupeo.rest.dtos.users;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.validation.constraints.Size;
 import java.util.UUID;

@@ -1,8 +1,6 @@
 package me.unp0wnable.groupeo.rest.dtos.users;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.validation.constraints.Size;
 import java.util.Date;
@@ -41,9 +39,11 @@ public class UserDTO {
     
     private Float score;
     
+    private String role;
+    
     /** Constuctor sin <c>password</c> */
     public UserDTO(UUID userID, String firstName, String surname1, String surname2, String email, Date birthDate,
-            Date joinDate, String description, String nickName, String imageB64, Float score) {
+            Date joinDate, String description, String nickName, String imageB64, Float score, String role) {
         this.userID = userID;
         this.firstName = firstName;
         this.surname1 = surname1;
@@ -55,11 +55,12 @@ public class UserDTO {
         this.nickName = nickName;
         this.imageB64 = imageB64;
         this.score = score;
+        this.role = role;
     }
     
     /** Constuctor sin <c>password, imageB64</c> */
     public UserDTO(UUID userID, String firstName, String surname1, String surname2, String email, Date birthDate,
-            Date joinDate, String description, String nickName, Float score) {
+            Date joinDate, String description, String nickName, Float score,  String role) {
         this.userID = userID;
         this.firstName = firstName;
         this.surname1 = surname1;
@@ -70,5 +71,6 @@ public class UserDTO {
         this.description = description;
         this.nickName = nickName;
         this.score = score;
+        this.role = role;
     }
 }

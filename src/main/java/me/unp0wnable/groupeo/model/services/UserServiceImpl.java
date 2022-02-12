@@ -2,10 +2,8 @@ package me.unp0wnable.groupeo.model.services;
 
 import me.unp0wnable.groupeo.model.entities.UserAddress;
 import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.model.exceptions.IncorrectLoginException;
-import me.unp0wnable.groupeo.model.exceptions.IncorrectPasswordExcepion;
-import me.unp0wnable.groupeo.model.exceptions.InstanceAlreadyExistsException;
-import me.unp0wnable.groupeo.model.exceptions.InstanceNotFoundException;
+import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
+import me.unp0wnable.groupeo.model.exceptions.*;
 import me.unp0wnable.groupeo.model.repositories.UserAddressRepository;
 import me.unp0wnable.groupeo.model.repositories.UserProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
-import java.util.Calendar;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -31,7 +27,7 @@ public class UserServiceImpl implements UserService {
     
     /* *********************************** USE CASES *********************************** */
     @Override
-    public void signUp(UserProfile profile, UserAddress address) throws InstanceAlreadyExistsException {
+    public void signUp(UserProfile profile) throws InstanceAlreadyExistsException {
         // Comprobar si ya existe un usuario con el mismo nick
         if (userProfileRepository.existsByNickName(profile.getNickName())) {
             throw new InstanceAlreadyExistsException(UserProfile.class.getName(), profile.getNickName());
@@ -44,15 +40,10 @@ public class UserServiceImpl implements UserService {
         profile.setSurname2(capitalize(profile.getSurname2()));
         profile.setJoinDate(( Date ) Calendar.getInstance().getTime());
         profile.setScore((float) 0);
+        profile.setRole(UserRoles.USER);
         
-        // Guardar datos de usuario recien creado
-        UserProfile storedUser = userProfileRepository.save(profile);
-        
-        // Asignar datos de la dirección (si existen)
-        if (address != null) {
-            address.setUserProfile(storedUser);
-            UserAddress storedAddress = userAddressRepository.save(address);
-        }
+        // Guardar datos de usuario recién creado
+        userProfileRepository.save(profile);
     }
     
     @Override
@@ -134,6 +125,13 @@ public class UserServiceImpl implements UserService {
         }
         UserProfile user = optionalUser.get();
         
+        // Buscar si el usuario tiene alguna dirección registrada
+        Optional<UserAddress> optionalAddress = userAddressRepository.findByUserProfile_UserProfileID(userID);
+        if (optionalAddress.isEmpty()) {
+            // El usuario aún no tiene ninguna dirección asignada: se crea
+            addressData.setUserProfile(user);
+        }
+        
         return userAddressRepository.save(addressData);
     }
     
@@ -146,7 +144,7 @@ public class UserServiceImpl implements UserService {
         }
         UserProfile user = optionalUser.get();
         
-        // ELiminar al usuario
+        // Eliminar al usuario
         userProfileRepository.deleteById(id);
     }
     

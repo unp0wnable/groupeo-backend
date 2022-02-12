@@ -1,8 +1,6 @@
 package me.unp0wnable.groupeo.rest.dtos.users;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.validation.constraints.Size;
 import java.util.Date;
@@ -30,5 +28,4 @@ public class SignUpParamsDto {
     private Date birthDate;
     
     private String imageB64;
-    
 }

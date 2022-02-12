@@ -1,4 +1,4 @@
-package me.unp0wnable.groupeo.model.exceptions;
+package me.unp0wnable.groupeo.rest.exceptions;
 
 public class PermissionException extends Exception {
 }

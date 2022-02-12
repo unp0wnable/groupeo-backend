@@ -29,6 +29,7 @@ CREATE TABLE UserProfile (
     password      VARCHAR       NOT NULL,
     avatarPath    VARCHAR,                  -- Path to user profile picture
     score         FLOAT         NOT NULL DEFAULT 0.0,
+    role          SMALLINT      NOT NULL,
     userAddressID UUID,
 
     CONSTRAINT PK_UserProfile PRIMARY KEY (userProfileID),
