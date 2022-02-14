@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: @activatedProperties@
+    active: '@activatedProperties@'
 
   datasource:
     tomcat:
