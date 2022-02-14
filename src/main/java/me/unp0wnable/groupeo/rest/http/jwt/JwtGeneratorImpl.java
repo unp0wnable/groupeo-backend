@@ -1,6 +1,5 @@
 package me.unp0wnable.groupeo.rest.http.jwt;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -8,7 +7,6 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.UUID;
 
-@SuppressFBWarnings("DM_DEFAULT_ENCODING")
 @Component
 public class JwtGeneratorImpl implements JwtGenerator {
     @Value("${project.jwt.signKey}")

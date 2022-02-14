@@ -18,15 +18,19 @@
 	</parent>
 
 	<properties>
+		<!-- Project properties -->
+		<project.contextPath>/groupeo</project.contextPath>
 		<java.version>11</java.version>
 		<testcontainers.version>1.16.2</testcontainers.version>
 
-		<!--  Compiler options -->
+		<!-- CI/CD configuration -->
+		<sonar.organization>unp0wnable</sonar.organization>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+
+		<!--  Compiler properties -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<!--  Global properties -->
-		<project.contextPath>/corusoft</project.contextPath>
 
 		<!-- Dependencies and versions plugins -->
 		<jjwt.version>0.9.1</jjwt.version>
@@ -109,6 +113,13 @@
             <artifactId>validation-api</artifactId>
         </dependency>
 
+		<dependency>
+			<groupId>com.github.spotbugs</groupId>
+			<artifactId>spotbugs-annotations</artifactId>
+			<version>4.5.0</version>
+			<scope>compile</scope>
+		</dependency>
+
     </dependencies>
 
 	<dependencyManagement>
@@ -124,6 +135,13 @@
 	</dependencyManagement>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
 		<testResources>
 			<testResource>
 				<directory>src/test/resources</directory>
@@ -168,6 +186,20 @@
 				</executions>
 			</plugin>
 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -192,5 +224,33 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
+
+	<!--  https://stackabuse.com/spring-boot-profiles-for-dev-and-prod-environments/  -->
+	<profiles>
+		<!--  Configuración del entorno de desarrollo  -->
+		<profile>
+			<id>dev</id>
+			<properties>
+				<activatedProperties>dev</activatedProperties>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<!--  Configuración del entorno de pruebas  -->
+		<profile>
+			<id>test</id>
+			<properties>
+				<activatedProperties>test</activatedProperties>
+			</properties>
+		</profile>
+		<!--  Configuración del entorno de producción  -->
+		<profile>
+			<id>prod</id>
+			<properties>
+				<activatedProperties>prod</activatedProperties>
+			</properties>
+		</profile>
+	</profiles>
 
 </project>
