@@ -19,8 +19,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class JwtFilter extends BasicAuthenticationFilter {
-    private final String AUTH_TOKEN_PREFIX = "Bearer ";
-    private final String ROLE_PREFIX = "ROLE_";
+    public static final String AUTH_TOKEN_PREFIX = "Bearer ";
+    private static final String ROLE_PREFIX = "ROLE_";
     
     private final JwtGenerator jwtGenerator;
     

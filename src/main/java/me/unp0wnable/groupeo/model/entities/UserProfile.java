@@ -1,19 +1,14 @@
 package me.unp0wnable.groupeo.model.entities;
 
-import lombok.*;
+import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.util.Date;
 import java.util.UUID;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@RequiredArgsConstructor
-@Getter
-@Setter
-@ToString
+@Data
 @Entity
 @Table(name = "UserProfile")
 public class UserProfile {
@@ -23,7 +18,7 @@ public class UserProfile {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Type(type = "uuid-char")
+    @Type(type = "org.hibernate.type.PostgresUUIDType")
     @Column(name = "userProfileID", nullable = false)
     private UUID userProfileID;
     

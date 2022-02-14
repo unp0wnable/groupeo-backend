@@ -16,4 +16,9 @@ public class UpdateProfileParamsDto {
     
     @Size(min = 1, max = 50)
     private String surname2;
+    
+    @Size(min = 1, max = 100)
+    private String email;
+    
+    private String description;
 }

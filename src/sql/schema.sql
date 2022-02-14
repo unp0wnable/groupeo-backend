@@ -43,7 +43,7 @@ CREATE TABLE UserAddress (
     region          VARCHAR(50),
     postalCode      VARCHAR(10),
     country         VARCHAR(50),
-    userProfileID   UUID    NOT NULL,
+    userProfileID   UUID,
 
     CONSTRAINT PK_UserAddress PRIMARY KEY (userAddressID),
     CONSTRAINT FK_UserAddress_TO_UserProfile FOREIGN KEY (userProfileID)

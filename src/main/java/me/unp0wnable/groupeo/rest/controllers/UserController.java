@@ -145,8 +145,26 @@ public class UserController {
         return dto;
     }
     
+    @PostMapping("/{userID}/address")
+    public AddressDto assignAddressToUser(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
+                                        @Validated @RequestBody AddressDto params)
+            throws PermissionException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, pathUserID)) {
+            throw new PermissionException();
+        }
+        
+        // Insertar dirección del usuario en el servicio
+        UserAddress address = UserConversor.fromAddressDTO(params);
+        UserAddress createdAddress = userService.assignAddressToUser(userID, address);
+        
+        // Generar respuesta
+        AddressDto dto = UserConversor.toAddressDto(createdAddress);
+        
+        return dto;
+    }
     
-    @PutMapping("/{userID}/updateAddress")
+    @PutMapping("/{userID}/address")
     public AddressDto updateUserAddress(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
                                         @Validated @RequestBody AddressDto params)
             throws PermissionException, InstanceNotFoundException {

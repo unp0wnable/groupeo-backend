@@ -11,7 +11,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Date;
 import java.util.*;
 
 @Service
@@ -38,7 +37,7 @@ public class UserServiceImpl implements UserService {
         profile.setFirstName(capitalize(profile.getFirstName()));
         profile.setSurname1(capitalize(profile.getSurname1()));
         profile.setSurname2(capitalize(profile.getSurname2()));
-        profile.setJoinDate(( Date ) Calendar.getInstance().getTime());
+        profile.setJoinDate(Calendar.getInstance().getTime());
         profile.setScore((float) 0);
         profile.setRole(UserRoles.USER);
         
@@ -66,21 +65,21 @@ public class UserServiceImpl implements UserService {
     
     @Override
     @Transactional(readOnly = true)
-    public UserProfile loginFromServiceToken(UUID id) throws InstanceNotFoundException {
+    public UserProfile loginFromServiceToken(UUID userID) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(id);
+        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), id);
+            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
         }
         return optionalUser.get();
     }
     
     @Override
-    public void changePassword(UUID id, String oldPassword, String newPassword) throws InstanceNotFoundException, IncorrectPasswordExcepion {
+    public void changePassword(UUID userID, String oldPassword, String newPassword) throws InstanceNotFoundException, IncorrectPasswordExcepion {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(id);
+        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), id);
+            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
         }
         UserProfile user = optionalUser.get();
         
@@ -94,30 +93,7 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public UserProfile updateUserProfile(UUID id, UserProfile profile) throws InstanceNotFoundException {
-        // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(id);
-        if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), id);
-        }
-        UserProfile user = optionalUser.get();
-        
-        // Comprobar qué datos se han modificado y actualizarlos
-        if (!profile.getFirstName().equals(user.getFirstName()))
-            user.setFirstName(capitalize(profile.getFirstName()));
-        if (!profile.getSurname1().equals(user.getSurname1()))
-            user.setSurname1(capitalize(profile.getSurname1()));
-        if (!profile.getSurname2().equals(user.getSurname2()))
-            user.setSurname2(capitalize(profile.getSurname2()));
-        if (!profile.getEmail().equals(user.getEmail()))
-            user.setEmail(profile.getEmail());
-        if (!profile.getDescription().equals(user.getDescription()))
-            user.setDescription(profile.getDescription());
-
-        return userProfileRepository.save(user);
-    }
-    
-    public UserAddress updateUserAddress(UUID userID, UserAddress addressData) throws InstanceNotFoundException {
+    public UserProfile updateUserProfile(UUID userID, UserProfile profile) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
         Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
@@ -125,33 +101,72 @@ public class UserServiceImpl implements UserService {
         }
         UserProfile user = optionalUser.get();
         
-        // Buscar si el usuario tiene alguna dirección registrada
-        Optional<UserAddress> optionalAddress = userAddressRepository.findByUserProfile_UserProfileID(userID);
-        if (optionalAddress.isEmpty()) {
-            // El usuario aún no tiene ninguna dirección asignada: se crea
-            addressData.setUserProfile(user);
-        }
-        
-        return userAddressRepository.save(addressData);
+        // Comprobar qué datos se han modificado y actualizarlos
+        if (!(profile.getFirstName() == null) && !profile.getFirstName().equals(user.getFirstName()))
+            user.setFirstName(capitalize(profile.getFirstName()));
+        if (!(profile.getSurname1() == null) && !profile.getSurname1().equals(user.getSurname1()))
+            user.setSurname1(capitalize(profile.getSurname1()));
+        if (!(profile.getSurname2() == null) && !profile.getSurname2().equals(user.getSurname2()))
+            user.setSurname2(capitalize(profile.getSurname2()));
+        if (!(profile.getEmail() == null) && !profile.getEmail().equals(user.getEmail()))
+            user.setEmail(profile.getEmail());
+        if (!(profile.getDescription() == null) && !profile.getDescription().equals(user.getDescription()))
+            user.setDescription(profile.getDescription());
+
+        return userProfileRepository.save(user);
     }
     
     @Override
-    public void deleteUser(UUID id) throws InstanceNotFoundException {
+    public UserAddress assignAddressToUser(UUID userID, UserAddress address) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(id);
+        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), id);
+            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
         }
         UserProfile user = optionalUser.get();
         
+        address.setUserProfile(user);
+        
+        return userAddressRepository.save(address);
+    }
+    
+    @Override
+    public UserAddress updateUserAddress(UUID userID, UserAddress address) throws InstanceNotFoundException {
+        // Comprobar si existe el usuario con el ID recibido
+        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
+        if ( optionalUser.isEmpty() ) {
+            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
+        }
+        UserProfile user = optionalUser.get();
+        
+        // Comprobar si existe la dirección
+        UUID addressID = address.getUserAddressID();
+        Optional<UserAddress> optionalAddress = userAddressRepository.findAddressByUserProfileID(userID);
+        if (optionalAddress.isEmpty()) {
+            throw new InstanceNotFoundException(UserAddress.class.getName(), addressID);
+        }
+        
+        
+        return userAddressRepository.save(address);
+    }
+    
+    @Override
+    public void deleteUser(UUID userID) throws InstanceNotFoundException {
+        // Comprobar si existe el usuario con el ID recibido
+        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
+        if ( optionalUser.isEmpty() ) {
+            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
+        }
+        
         // Eliminar al usuario
-        userProfileRepository.deleteById(id);
+        userProfileRepository.deleteById(userID);
     }
     
     
     /* ****************************** AUX FUNCTIONS ****************************** */
     private String capitalize(String string) {
         if (string == null) return null;
+        if (string.isEmpty()) return string;
         
         String firstChar = string.substring(0, 1);
         String rest = string.substring(1);

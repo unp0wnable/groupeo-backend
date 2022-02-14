@@ -12,14 +12,16 @@ public interface UserService {
     
     UserProfile login(String nickName, String rawPassword) throws IncorrectLoginException;
     
-    UserProfile loginFromServiceToken(UUID id) throws InstanceNotFoundException;
+    UserProfile loginFromServiceToken(UUID userID) throws InstanceNotFoundException;
     
     void changePassword(UUID id, String oldPassword, String newPassword) throws InstanceNotFoundException,
                                                                                 IncorrectPasswordExcepion;
     
-    UserProfile updateUserProfile(UUID id, UserProfile profile) throws InstanceNotFoundException;
+    UserProfile updateUserProfile(UUID userID, UserProfile profile) throws InstanceNotFoundException;
     
-    UserAddress updateUserAddress(UUID userID, UserAddress addressData) throws InstanceNotFoundException;
+    UserAddress assignAddressToUser(UUID userID, UserAddress address) throws InstanceNotFoundException;
     
-    void deleteUser(UUID id) throws InstanceNotFoundException;
+    UserAddress updateUserAddress(UUID userID, UserAddress address)  throws InstanceNotFoundException;
+    
+    void deleteUser(UUID userID) throws InstanceNotFoundException;
 }

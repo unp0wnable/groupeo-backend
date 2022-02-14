@@ -1,5 +1,6 @@
 package me.unp0wnable.groupeo.rest.http.jwt;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.UUID;
 
+@SuppressFBWarnings("DM_DEFAULT_ENCODING")
 @Component
 public class JwtGeneratorImpl implements JwtGenerator {
     @Value("${project.jwt.signKey}")
@@ -25,7 +27,7 @@ public class JwtGeneratorImpl implements JwtGenerator {
                    .setExpiration(tokenExpirationDate)
                    .signWith(SignatureAlgorithm.HS512, signKey.getBytes())
                    // Información a almacenar en el JWT
-                   .claim("nickname", data.getNickName())
+                   .claim("nickName", data.getNickName())
                    .claim("userID", data.getUserID())
                    .claim("role", data.getRole())
                    .compact();

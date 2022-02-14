@@ -32,8 +32,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST,   "/users/login").permitAll()                     // login
                 .antMatchers(HttpMethod.POST,   "/users/tokenLogin").permitAll()                // loginFromServiceToken
                 .antMatchers(HttpMethod.POST,   "/users/*/changePassword").permitAll()          // changePassword
-                .antMatchers(HttpMethod.PUT,    "/users/*/update").permitAll()                  // updateProfile
-                .antMatchers(HttpMethod.PUT,    "/users/*/updateAddress").permitAll()           // updateAddress
+                .antMatchers(HttpMethod.PUT,    "/users/*/update").permitAll()                  // updateUserProfile
+                .antMatchers(HttpMethod.POST,    "/users/*/address").permitAll()                // assignAddressToUser
+                .antMatchers(HttpMethod.PUT,    "/users/*/address").permitAll()                 // updateUserAddress
                 .antMatchers(HttpMethod.DELETE, "/users/*").permitAll()                         // deleteUser
                 // EVENTS ENDPOINTS
                 

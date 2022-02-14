@@ -6,8 +6,6 @@ import me.unp0wnable.groupeo.model.entities.UserProfile;
 import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
 
-import java.sql.Date;
-
 @NoArgsConstructor
 public class UserConversor {
     /* ******************** Convertir a DTO ******************** */
@@ -25,7 +23,7 @@ public class UserConversor {
                 user.getScore(),
                 user.getRole().toString()
         );
-        
+        dto.setPassword(user.getPassword());
         // Agrega valores optativos si están disponibles
         if (user.getImageB64() != null) dto.setImageB64(user.getImageB64());
         
@@ -57,8 +55,8 @@ public class UserConversor {
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());
         user.setEmail(dto.getEmail());
-        user.setBirthDate(( Date ) dto.getBirthDate());
-        user.setJoinDate(( Date ) dto.getJoinDate());
+        user.setBirthDate(dto.getBirthDate());
+        user.setJoinDate(dto.getJoinDate());
         user.setDescription(dto.getDescription());
         user.setNickName(dto.getNickName());
         user.setScore(dto.getScore());
@@ -78,7 +76,7 @@ public class UserConversor {
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getRawPassword());
         user.setEmail(dto.getEmail());
-        user.setBirthDate(( Date ) dto.getBirthDate());
+        user.setBirthDate(dto.getBirthDate());
         user.setImageB64(dto.getImageB64());
         
         return user;
@@ -89,6 +87,8 @@ public class UserConversor {
         user.setNickName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());
+        user.setEmail(dto.getEmail());
+        user.setDescription(dto.getDescription());
      
         return user;
     }
@@ -99,6 +99,7 @@ public class UserConversor {
         address.setCountry(dto.getCountry());
         address.setPostalCode(dto.getPostalCode());
         address.setRegion(dto.getRegion());
+        address.setUserProfile(dto.getUserProfile());
         
         return address;
     }

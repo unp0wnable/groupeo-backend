@@ -1,6 +1,7 @@
 package me.unp0wnable.groupeo.rest.dtos.users;
 
 import lombok.*;
+import me.unp0wnable.groupeo.model.entities.UserProfile;
 
 import javax.validation.constraints.Size;
 import java.util.UUID;
@@ -24,5 +25,5 @@ public class AddressDto {
     @Size(min = 1, max = 50)
     private String country;
     
-    private UUID userProfileID;
+    private UserProfile userProfile;
 }
