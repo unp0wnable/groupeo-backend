@@ -1,14 +1,8 @@
-logging:
-  level:
-    org:
-      hibernate:
-        SQL: error
-
 spring:
+  profiles:
+    active: '@activatedProperties@'
+
   datasource:
-    url: @dataSource.url@
-    username: @dataSource.user@
-    password: @dataSource.password@
     tomcat:
       max-active: 8
       max-idle: 2
@@ -16,7 +10,6 @@ spring:
       remove-abandoned: true
       remove-abandoned-timeout: 30
       log-abandoned: true
-      validation-query: SELECT 1
   devtools:
     restart:
       trigger-file: reload
@@ -28,11 +21,12 @@ spring:
     database: POSTGRESQL
     show-sql: false
     hibernate:
-      use-sql-comments: true
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
-      format-sql: true
+      hibernate:
+        format-sql: true
+        show-sql: true
       ddl-auto: none
 
 
@@ -43,4 +37,4 @@ server:
 project:
   jwt:
     signKey: Bu:GW8bgPlEw
-    expirationMinutes: 2880   # 2 days (60 * 24 * 2)
+    expirationMinutes: 15   # Short time to avoid security issues in case of JWT leaking

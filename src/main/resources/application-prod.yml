@@ -1,0 +1,9 @@
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: error
+
+spring:
+  datasource:
+    url: ${DATABASE_URL}
