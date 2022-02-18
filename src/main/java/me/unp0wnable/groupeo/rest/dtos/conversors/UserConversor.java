@@ -1,12 +1,12 @@
 package me.unp0wnable.groupeo.rest.dtos.conversors;
 
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
 import me.unp0wnable.groupeo.model.entities.UserProfile;
 import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
 
-@NoArgsConstructor
+@UtilityClass
 public class UserConversor {
     /* ******************** Convertir a DTO ******************** */
     public static UserDto toUserDto(UserProfile user) {
@@ -99,7 +99,6 @@ public class UserConversor {
         address.setCountry(dto.getCountry());
         address.setPostalCode(dto.getPostalCode());
         address.setRegion(dto.getRegion());
-        address.setUserProfile(dto.getUserProfile());
         
         return address;
     }

@@ -32,8 +32,8 @@ public class UserController {
     MessageSource messageSource;
     
     /* ********************************************* EXCEPTION HANDLERS ********************************************* */
-    private final static String INCORRECT_LOGIN_EXCEPTION_KEY = "project.exceptions.IncorrectLoginException";
-    private final static String INCORRECT_PASSWORD_EXCEPTION_KEY = "project.exceptions.IncorrectPasswordException";
+    private static final String INCORRECT_LOGIN_EXCEPTION_KEY = "project.exceptions.IncorrectLoginException";
+    private static final String INCORRECT_PASSWORD_EXCEPTION_KEY = "project.exceptions.IncorrectPasswordException";
     
     
     @ExceptionHandler(IncorrectLoginException.class)
@@ -94,9 +94,7 @@ public class UserController {
         String token = generateServiceTokenForUser(user);
         
         // Crea la respuesta y la envía
-        AuthenticatedUserDto authUserDto = UserConversor.toAuthenticatedUserDTO(user, token);
-        
-        return authUserDto;
+        return UserConversor.toAuthenticatedUserDTO(user, token);
     }
     
     
@@ -140,9 +138,7 @@ public class UserController {
         UserProfile updatedUser = userService.updateUserProfile(userID, userData);
         
         // Generar respuesta
-        UserDto dto = UserConversor.toUserDto(updatedUser);
-        
-        return dto;
+        return UserConversor.toUserDto(updatedUser);
     }
     
     @PostMapping("/{userID}/address")
@@ -159,28 +155,7 @@ public class UserController {
         UserAddress createdAddress = userService.assignAddressToUser(userID, address);
         
         // Generar respuesta
-        AddressDto dto = UserConversor.toAddressDto(createdAddress);
-        
-        return dto;
-    }
-    
-    @PutMapping("/{userID}/address")
-    public AddressDto updateUserAddress(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
-                                        @Validated @RequestBody AddressDto params)
-            throws PermissionException, InstanceNotFoundException {
-        // Comprobar que el usuario actual es quién dice ser
-        if (!doUsersMatch(userID, pathUserID)) {
-            throw new PermissionException();
-        }
-    
-        // Actualizar dirección en el servicio
-        UserAddress address = UserConversor.fromAddressDTO(params);
-        UserAddress updatedAddress = userService.updateUserAddress(userID, address);
-    
-        // Generar respuesta
-        AddressDto dto = UserConversor.toAddressDto(updatedAddress);
-    
-        return dto;
+        return UserConversor.toAddressDto(createdAddress);
     }
     
     

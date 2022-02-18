@@ -102,15 +102,15 @@ public class UserServiceImpl implements UserService {
         UserProfile user = optionalUser.get();
         
         // Comprobar qué datos se han modificado y actualizarlos
-        if (!(profile.getFirstName() == null) && !profile.getFirstName().equals(user.getFirstName()))
+        if ((profile.getFirstName() != null) && !profile.getFirstName().equals(user.getFirstName()))
             user.setFirstName(capitalize(profile.getFirstName()));
-        if (!(profile.getSurname1() == null) && !profile.getSurname1().equals(user.getSurname1()))
+        if ((profile.getSurname1() != null) && !profile.getSurname1().equals(user.getSurname1()))
             user.setSurname1(capitalize(profile.getSurname1()));
-        if (!(profile.getSurname2() == null) && !profile.getSurname2().equals(user.getSurname2()))
+        if ((profile.getSurname2() != null) && !profile.getSurname2().equals(user.getSurname2()))
             user.setSurname2(capitalize(profile.getSurname2()));
-        if (!(profile.getEmail() == null) && !profile.getEmail().equals(user.getEmail()))
+        if ((profile.getEmail() != null) && !profile.getEmail().equals(user.getEmail()))
             user.setEmail(profile.getEmail());
-        if (!(profile.getDescription() == null) && !profile.getDescription().equals(user.getDescription()))
+        if ((profile.getDescription() != null) && !profile.getDescription().equals(user.getDescription()))
             user.setDescription(profile.getDescription());
 
         return userProfileRepository.save(user);
@@ -125,29 +125,11 @@ public class UserServiceImpl implements UserService {
         }
         UserProfile user = optionalUser.get();
         
-        address.setUserProfile(user);
+        // Asigna la dirección al usuario
+        user.setAddress(address);
+        UserProfile updatedUser = userProfileRepository.save(user);
         
-        return userAddressRepository.save(address);
-    }
-    
-    @Override
-    public UserAddress updateUserAddress(UUID userID, UserAddress address) throws InstanceNotFoundException {
-        // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
-        if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
-        }
-        UserProfile user = optionalUser.get();
-        
-        // Comprobar si existe la dirección
-        UUID addressID = address.getUserAddressID();
-        Optional<UserAddress> optionalAddress = userAddressRepository.findAddressByUserProfileID(userID);
-        if (optionalAddress.isEmpty()) {
-            throw new InstanceNotFoundException(UserAddress.class.getName(), addressID);
-        }
-        
-        
-        return userAddressRepository.save(address);
+        return updatedUser.getAddress();
     }
     
     @Override

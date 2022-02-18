@@ -21,7 +21,5 @@ public interface UserService {
     
     UserAddress assignAddressToUser(UUID userID, UserAddress address) throws InstanceNotFoundException;
     
-    UserAddress updateUserAddress(UUID userID, UserAddress address)  throws InstanceNotFoundException;
-    
     void deleteUser(UUID userID) throws InstanceNotFoundException;
 }

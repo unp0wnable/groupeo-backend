@@ -30,7 +30,9 @@ public class UserAddress {
     @Column(name = "country", length = 50)
     private String country;
     
-    @OneToOne(optional = false, orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @OneToOne(optional = false,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
     @JoinColumn(name = "userProfileID")
     private UserProfile userProfile;
 }

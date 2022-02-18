@@ -179,38 +179,42 @@ public class UserServiceTest {
     }
     
     @Test
+    public void testAssignAddressToUser() throws InstanceAlreadyExistsException, InstanceNotFoundException {
+        // Generar datos
+        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        userService.signUp(user);                           // Registrar usuario antes para obtener su ID
+        UserAddress generatedAddress = generateValidAddressForUser(user);
+        
+        // Ejecutar funcionalidades
+        UUID userID = user.getUserProfileID();
+        UserAddress assignedAddress = userService.assignAddressToUser(userID, generatedAddress);
+        
+        // Comprobar resultados
+        assertEquals(assignedAddress.getUserProfile(), user);
+        assertEquals(generatedAddress.getCity(), assignedAddress.getCity());
+        assertEquals(generatedAddress.getRegion(), assignedAddress.getRegion());
+        assertEquals(generatedAddress.getPostalCode(), assignedAddress.getPostalCode());
+        assertEquals(generatedAddress.getCountry(), assignedAddress.getCountry());
+    }
+    
+    @Test
     public void testUpdateUserAddress() throws InstanceAlreadyExistsException, InstanceNotFoundException {
         // Generar datos
         UserProfile user = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(user);                           // Registrar usuario antes para obtener su ID
-        UserAddress originalAddress = generateValidAddressForUser(user);
+        UserAddress generatedAddress = generateValidAddressForUser(user);
         UUID userID = user.getUserProfileID();
-        userService.assignAddressToUser(userID, originalAddress);
+        UserAddress updatingAddress = userService.assignAddressToUser(userID, generatedAddress);
         
         // Ejecutar funcionalidades
-        originalAddress.setCountry(originalAddress.getCountry() + 'X');
-        originalAddress.setCity(originalAddress.getCity() + 'X');
-        originalAddress.setRegion(originalAddress.getRegion() + 'X');
-        originalAddress.setPostalCode(originalAddress.getPostalCode() + 'X');
-        UserAddress updatedAddress = userService.updateUserAddress(userID, originalAddress);
+        updatingAddress.setCountry(generatedAddress.getCountry() + 'X');
+        updatingAddress.setCity(generatedAddress.getCity() + 'X');
+        updatingAddress.setRegion(generatedAddress.getRegion() + 'X');
+        updatingAddress.setPostalCode(generatedAddress.getPostalCode() + 'X');
+        UserAddress updatedAddress = userService.assignAddressToUser(userID, updatingAddress);
         
         // Comprobar resultados
-        assertEquals(originalAddress, updatedAddress);
-        assertEquals(user, updatedAddress.getUserProfile());
-    }
-    
-    @Test
-    public void testUpdateNonExistingAddress() throws InstanceAlreadyExistsException {
-        // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
-        UserAddress address = generateValidAddressForUser(user);
-        address.setUserAddressID(NON_EXISTENT_ADDRESS_ID);
-        
-        // Comprobar resultados
-        userService.signUp(user);                           // Registrar usuario antes para obtener su ID
-        assertThrows(InstanceNotFoundException.class,
-            () -> userService.updateUserAddress(user.getUserProfileID(), address)
-        );
+        assertEquals(updatingAddress, updatedAddress);
     }
     
     @Test

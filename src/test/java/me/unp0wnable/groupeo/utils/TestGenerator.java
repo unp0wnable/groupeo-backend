@@ -1,5 +1,6 @@
 package me.unp0wnable.groupeo.utils;
 
+import lombok.experimental.UtilityClass;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
 import me.unp0wnable.groupeo.model.entities.UserProfile;
 import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
@@ -9,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /** Clase con métodos auxiliares para la ejecución de los test */
+@UtilityClass
 public class TestGenerator {
     // INFO: https://stackoverflow.com/questions/64580412/generate-valid-deterministic-uuids-for-tests
     public static final UUID NON_EXISTENT_USER_ID = UUID.fromString("00000000-0000-4000-8000-000000000000");

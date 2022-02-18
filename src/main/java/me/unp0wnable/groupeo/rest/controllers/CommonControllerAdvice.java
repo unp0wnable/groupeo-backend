@@ -18,9 +18,9 @@ public class CommonControllerAdvice {
     
     /* ********************************************* EXCEPTION HANDLERS *********************************************  */
     // Referencias a los errores en los ficheros de i18n
-    private final static String INSTANCE_ALREADY_EXISTS_EXCEPTION_KEY = "project.exceptions.InstanceAlreadyExistsException";
-    private final static String INSTANCE_NOT_FOUND_EXCEPTION_KEY = "project.exceptions.InstanceNotFoundException";
-    private final static String PERMISSION_EXCEPTION_KEY = "project.exceptions.PermissionException";
+    private static final String INSTANCE_ALREADY_EXISTS_EXCEPTION_KEY = "project.exceptions.InstanceAlreadyExistsException";
+    private static final String INSTANCE_NOT_FOUND_EXCEPTION_KEY = "project.exceptions.InstanceNotFoundException";
+    private static final String PERMISSION_EXCEPTION_KEY = "project.exceptions.PermissionException";
     
     @ExceptionHandler(InstanceAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

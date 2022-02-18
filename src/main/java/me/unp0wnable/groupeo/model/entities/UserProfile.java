@@ -58,4 +58,10 @@ public class UserProfile {
     
     @Column(name = "role")
     private UserRoles role;
+    
+    @OneToOne(mappedBy = "userProfile",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.PERSIST,
+            orphanRemoval = true)
+    private UserAddress address;
 }

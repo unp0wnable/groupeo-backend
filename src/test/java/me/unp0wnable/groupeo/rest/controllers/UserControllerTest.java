@@ -85,9 +85,7 @@ public class UserControllerTest {
         userAddressRepository.save(address);
         
         // Genera el DTO con los datos de la dirección recién creada
-        AddressDto dto = UserConversor.toAddressDto(address);
-        
-        return dto;
+        return UserConversor.toAddressDto(address);
     }
     
     /** Crea un DTO con los datos necesarios para registrar un usuario válido */
@@ -471,7 +469,7 @@ public class UserControllerTest {
     }
     
     @Test
-    public void testCreateNewAddressForUser_PUT() throws Exception {
+    public void testCreateNewAddressForUser_POST() throws Exception {
         // Crear datos de prueba
         AuthenticatedUserDto authUserDto = createAuthenticatedUser(DEFAULT_NICKNAME);
         AddressDto paramsDto = createAddressForUser(UserConversor.fromUserDTO(authUserDto.getUserDTO()));
@@ -496,7 +494,7 @@ public class UserControllerTest {
     }
     
     @Test
-    public void testCreateNewAddressForOtherUser_PUT() throws Exception {
+    public void testCreateNewAddressForOtherUser_POST() throws Exception {
         // Crear datos de prueba
         AuthenticatedUserDto currentUserDto = createAuthenticatedUser("currentUser");
         AuthenticatedUserDto targetUserDto = createAuthenticatedUser("targetUser");
@@ -529,7 +527,6 @@ public class UserControllerTest {
         UserProfile user = UserConversor.fromUserDTO(authUserDto.getUserDTO());
         AddressDto paramsDto = createAddressForUser(user);
         String userID = authUserDto.getUserDTO().getUserID().toString();
-        paramsDto.setUserProfile(user);
         paramsDto.setAddressID(paramsDto.getAddressID());
         paramsDto.setCity(paramsDto.getCity() + "XXX");
         paramsDto.setRegion(paramsDto.getRegion() + "XXX");
@@ -540,7 +537,7 @@ public class UserControllerTest {
         
         // Ejecutar funcionalidades
         var performAction = mockMvc.perform(
-                put(endpointAddress)
+                post(endpointAddress)
                         // Valores anotados como @RequestAttribute
                         .requestAttr("userID", UUID.fromString(userID))
                         .header(HttpHeaders.AUTHORIZATION, AUTH_TOKEN_PREFIX + authUserDto.getServiceToken())
@@ -555,7 +552,7 @@ public class UserControllerTest {
     }
     
     @Test
-    public void testUpdateAddressToOtherUser_PUT() throws Exception {
+    public void testUpdateAddressToOtherUser_POST() throws Exception {
         // Crear datos de prueba
         AuthenticatedUserDto currentUserDto = createAuthenticatedUser("currentUser");
         AuthenticatedUserDto targetUserDto = createAuthenticatedUser("targetUser");
@@ -563,7 +560,6 @@ public class UserControllerTest {
         AddressDto paramsDto = createAddressForUser(currentUser);
         String currentUserID = currentUserDto.getUserDTO().getUserID().toString();
         String targetUserID = targetUserDto.getUserDTO().getUserID().toString();
-        paramsDto.setUserProfile(currentUser);
         paramsDto.setAddressID(paramsDto.getAddressID());
         paramsDto.setCity(paramsDto.getCity() + "XXX");
         paramsDto.setRegion(paramsDto.getRegion() + "XXX");
@@ -574,7 +570,7 @@ public class UserControllerTest {
         
         // Ejecutar funcionalidades
         var performAction = mockMvc.perform(
-                put(endpointAddress)
+                post(endpointAddress)
                         // Valores anotados como @RequestAttribute
                         .requestAttr("userID", UUID.fromString(currentUserID))
                         .header(HttpHeaders.AUTHORIZATION, AUTH_TOKEN_PREFIX + currentUserDto.getServiceToken())
@@ -587,41 +583,6 @@ public class UserControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
-    
-    @Test
-    public void testUpdateNonExistentAddress_PUT() throws Exception {
-        // Crear datos de prueba
-        AuthenticatedUserDto authUserDto = createAuthenticatedUser(DEFAULT_NICKNAME);
-        UserProfile user = UserConversor.fromUserDTO(authUserDto.getUserDTO());
-        AddressDto paramsDto = createAddressForUser(user);
-        //Elimina la dirección recién creado para que no exista en el servicio
-        userAddressRepository.deleteAll();
-        String userID = authUserDto.getUserDTO().getUserID().toString();
-        paramsDto.setUserProfile(user);
-        paramsDto.setAddressID(paramsDto.getAddressID());
-        paramsDto.setCity(paramsDto.getCity() + "XXX");
-        paramsDto.setRegion(paramsDto.getRegion() + "XXX");
-        paramsDto.setCountry(paramsDto.getCountry() + "XXX");
-        paramsDto.setPostalCode(paramsDto.getPostalCode() + "0");
-        String endpointAddress = API_ENDPOINT + "/" + userID + "/address";
-        String encodedBodyContent = this.mapper.writeValueAsString(paramsDto);
-        
-        // Ejecutar funcionalidades
-        var performAction = mockMvc.perform(
-                put(endpointAddress)
-                        // Valores anotados como @RequestAttribute
-                        .requestAttr("userID", UUID.fromString(userID))
-                        .header(HttpHeaders.AUTHORIZATION, AUTH_TOKEN_PREFIX + authUserDto.getServiceToken())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(encodedBodyContent)
-        );
-        
-        // Comprobar resultados
-        performAction
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
-    
     
     @Test
     public void testDeleteUser_DELETE() throws Exception {
