@@ -3,6 +3,9 @@ FROM adoptopenjdk/openjdk11:latest
 
 RUN ls -la
 
+# Directorio en el que almacenar el código a desplegar
+WORKDIR /deploy
+
 # Copiar ejecutable .jar
 COPY **/groupeo**.jar .
 
