@@ -42,10 +42,6 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: heroku container:login
 
-      # Visualizar ficheros en directorio actual
-      - name: Show current directory files
-        run: ls -la ./target
-
       # Construir imagen Docker en Heroku
       - name: Build and push
         env:
