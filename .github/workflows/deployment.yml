@@ -1,0 +1,31 @@
+# Acción para desplegar código en servidor de despliegues: Heroku
+# INFO: https://github.com/marketplace/actions/build-push-and-release-a-docker-container-to-heroku
+name: Production deployment.
+on:
+  # Al pushear a la rama principal del repositorio
+  push:
+    branches:
+      - main
+      - release
+
+jobs:
+  # Desplegar código a servidor de producción en Heroku mediante contenedor de Docker
+  deploy:
+    name: Containerize package
+    runs-on: ubuntu-latest
+    steps:
+      # Permisos para manipular repositorio
+      - name: Checkout code.
+        uses: actions/checkout@v2
+
+      - name: Build, push and release a Docker containter to Heroku.
+        uses: gonuit/heroku-docker-deploy@v1.3.3
+        with:
+          # Heroku variables
+          email: ${{ secrets.HEROKU_EMAIL }}                  # Email de la cuenta de Heroku
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}     # Nombre de la aplicación en Heroku
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}       # Clave de la API de Heroku
+          dockerfile_directory: src/main/docker               # Directorio de los ficheros de Docker dentro del proyecto
+          dockerfile_name: Dockerfile                         # Fichero de configuración de Docker
+          docker_options: ""                                  # Opciones al ejecutar _docker build_
+          process_type: web                                   # Tipo de proceso en Heroku (dyno). INFO: https://devcenter.heroku.com/articles/process-model

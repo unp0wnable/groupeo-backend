@@ -4,11 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.unp0wnable</groupId>
 	<artifactId>groupeo</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<name>Groupeo-backend</name>
 	<description>Groupeo app backend built in Spring </description>
 	<url>https://github.com/unp0wnable/groupeo-backend</url>
 	<inceptionYear>2022</inceptionYear>
+	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -257,6 +258,7 @@
 			<id>prod</id>
 			<properties>
 				<activatedProperties>prod</activatedProperties>
+				<maven.test.skip>true</maven.test.skip>			<!-- No ejecutar tests -->
 			</properties>
 		</profile>
 	</profiles>
