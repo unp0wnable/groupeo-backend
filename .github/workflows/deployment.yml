@@ -44,7 +44,7 @@ jobs:
           
       # Visualizar ficheros en directorio actual
       - name: Show current directory files
-        run: ls -la ./target/classes && cat ./target/Dockerfile.web
+        run: ls -la ./target/classes && cat ./target/classes/Dockerfile.web
 
       # Construir imagen Docker en Heroku
       - name: Build and push
