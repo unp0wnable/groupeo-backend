@@ -9,7 +9,7 @@ RUN ls -la
 COPY . /deploy
 
 
-WORKDIR /deploy
+WORKDIR /deploy/target
 RUN ls -la
 
 # Comando para arrancar aplicación
