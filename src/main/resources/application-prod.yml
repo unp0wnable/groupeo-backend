@@ -6,4 +6,4 @@ logging:
 
 spring:
   datasource:
-    url: jdbc:postgres://amnywvygqxeyfz:18f623a49d97d3939a2491e5b906f582b25a7b71ff462a783056c2325ad409aa@ec2-34-250-92-138.eu-west-1.compute.amazonaws.com:5432/dcohlnrm1bitck
+    url: ${{ DATABASE_URL }}
