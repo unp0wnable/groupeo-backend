@@ -38,7 +38,7 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os}}-sonar
 
-      # Obtener dependencias de Maven
+      # Cachear dependencias de Maven
       - name: Cache Maven packages.
         uses: actions/cache@v1
         with:
@@ -51,4 +51,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Needed to get PR data, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=unp0wnable_groupeo-backend -P test
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=unp0wnable_groupeo-backend -Ptest

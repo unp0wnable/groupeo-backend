@@ -23,10 +23,18 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+            
+      # Cachear dependencias de Maven
+      - name: Cache Maven packages.
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}
 
       # Generar imagen .jar con Maven
       - name: Build project with Maven
-        run: mvn -B package --file pom.xml -Dprod
+        run: mvn -B package --file pom.xml -Pprod
 
       # Iniciar sesión en registro de contenedores de Heroku
       - name: Heroku Container Registry login
