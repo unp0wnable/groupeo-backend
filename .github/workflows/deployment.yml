@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-            
+
       # Cachear dependencias de Maven
       - name: Cache Maven packages.
         uses: actions/cache@v1
@@ -41,12 +41,16 @@ jobs:
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: heroku container:login
+          
+      # Visualizar ficheros en directorio actual
+      - name: Show current directory files
+        run: ls -la
 
       # Construir imagen Docker en Heroku
       - name: Build and push
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web
+        run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web --context-path src/main/docker
 
       # Publicar imágen
       - name: Release
