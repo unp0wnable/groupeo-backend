@@ -18,14 +18,30 @@ jobs:
       - name: Checkout code.
         uses: actions/checkout@v2
 
-      - name: Build, push and release a Docker containter to Heroku.
-        uses: gonuit/heroku-docker-deploy@v1.3.3
+      # Configurar JAVA 11 en la máquina de referencia
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
         with:
-          # Heroku variables
-          email: ${{ secrets.HEROKU_MAIL }}                  # Email de la cuenta de Heroku
-          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}     # Nombre de la aplicación en Heroku
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}       # Clave de la API de Heroku
-          dockerfile_directory: src/main/docker               # Directorio de los ficheros de Docker dentro del proyecto
-          dockerfile_name: Dockerfile                         # Fichero de configuración de Docker
-          docker_options: ""                                  # Opciones al ejecutar _docker build_
-          process_type: web                                   # Tipo de proceso en Heroku (dyno). INFO: https://devcenter.heroku.com/articles/process-model
+          java-version: 11
+
+      # Generar imagen .jar con Maven
+      - name: Build project with Maven
+        run: mvn -B package --file pom.xml -Dprod
+
+      # Iniciar sesión en registro de contenedores de Heroku
+      - name: Heroku Container Registry login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:login
+
+      # Construir imagen Docker en Heroku
+      - name: Build and push
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web
+
+      # Publicar imágen
+      - name: Release
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web

@@ -136,7 +136,7 @@
 	</dependencyManagement>
 
 	<build>
-		<finalName>${project.artifactId}</finalName>
+		<finalName>${project.artifactId}-${project.version}</finalName>
 
 		<resources>
 			<resource>

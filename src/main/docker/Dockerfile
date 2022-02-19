@@ -1,12 +1,8 @@
-# Descargar imagen de Java
-FROM openjdk:11-jdk
-MAINTAINER Unp0wnable
-
-# Construir proyecto Maven (mvn build)
-RUN mvn clean install -Dprod
-# Comprobar si todo se ha copiado correctamente
-RUN ls -l
-# Copiar el ejecutable .jar al contenedor actual
-COPY "/target/groupeo.jar" "groupeo.jar"
-# Ejecutar app
-CMD ["sh","-c", "java $JAVA_OPTS -Dserver.port=$PORT -jar /groupeo.jar"]
+# Imagen de Java para compilar la aplicación
+FROM adoptopenjdk/openjdk11:latest
+# Directorio en el que copiar el ejecutable
+RUN mkdir -p /software
+# Copiar ejecutable .jar
+ADD target/groupeo-*.jar /software/groupeo.jar
+# Comando para arrancar aplicación
+CMD java -Dserver.port=$PORT $JAVA_OPTS -jar /software/groupeo-*.jar
