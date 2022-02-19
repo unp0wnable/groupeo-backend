@@ -44,15 +44,15 @@ jobs:
           
       # Visualizar ficheros en directorio actual
       - name: Show current directory files
-        run: ls -la
+        run: ls -la ./target/classes && cat ./target/Dockerfile.web
 
       # Construir imagen Docker en Heroku
       - name: Build and push
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web --context-path src/main/docker
+        run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web --context-path ./target --recursive
 
-      # Publicar imágen
+      # Publicar imagen
       - name: Release
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

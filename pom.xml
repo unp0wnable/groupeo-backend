@@ -137,10 +137,13 @@
 
 	<build>
 		<finalName>${project.artifactId}-${project.version}</finalName>
-
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/docker</directory>
 				<filtering>true</filtering>
 			</resource>
 		</resources>
