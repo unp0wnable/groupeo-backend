@@ -22,7 +22,7 @@ jobs:
         uses: gonuit/heroku-docker-deploy@v1.3.3
         with:
           # Heroku variables
-          email: ${{ secrets.HEROKU_EMAIL }}                  # Email de la cuenta de Heroku
+          email: ${{ secrets.HEROKU_MAIL }}                  # Email de la cuenta de Heroku
           heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}     # Nombre de la aplicación en Heroku
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}       # Clave de la API de Heroku
           dockerfile_directory: src/main/docker               # Directorio de los ficheros de Docker dentro del proyecto
