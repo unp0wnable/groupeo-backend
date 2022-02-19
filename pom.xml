@@ -117,7 +117,7 @@
 		<dependency>
 			<groupId>com.github.spotbugs</groupId>
 			<artifactId>spotbugs-annotations</artifactId>
-			<version>4.5.0</version>
+			<version>4.5.3</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -136,6 +136,8 @@
 	</dependencyManagement>
 
 	<build>
+		<finalName>${project.artifactId}</finalName>
+
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
