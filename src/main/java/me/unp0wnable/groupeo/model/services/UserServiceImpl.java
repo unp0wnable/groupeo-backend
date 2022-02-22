@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
     
     /* *********************************** USE CASES *********************************** */
     @Override
-    public void signUp(UserProfile profile) throws InstanceAlreadyExistsException {
+    public UserProfile signUp(UserProfile profile) throws InstanceAlreadyExistsException {
         // Comprobar si ya existe un usuario con el mismo nick
         if (userProfileRepository.existsByNickName(profile.getNickName())) {
             throw new InstanceAlreadyExistsException(UserProfile.class.getName(), profile.getNickName());
@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
         profile.setRole(UserRoles.USER);
         
         // Guardar datos de usuario recién creado
-        userProfileRepository.save(profile);
+        return userProfileRepository.save(profile);
     }
     
     @Override
