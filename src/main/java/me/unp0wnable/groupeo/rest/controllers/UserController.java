@@ -91,21 +91,21 @@ public class UserController {
         UserProfile user = userService.login(params.getNickName(), params.getPassword());
         
         // Genera el token para el usuario
-        String token = generateServiceTokenForUser(user);
+        String serviceToken = generateServiceTokenForUser(user);
         
         // Crea la respuesta y la envía
-        return UserConversor.toAuthenticatedUserDTO(user, token);
+        return UserConversor.toAuthenticatedUserDTO(user, serviceToken);
     }
     
     
     @PostMapping("/tokenLogin")
-    public AuthenticatedUserDto loginUsingServiceToken(@RequestAttribute UUID userID, @RequestAttribute String token)
+    public AuthenticatedUserDto loginUsingServiceToken(@RequestAttribute UUID userID, @RequestAttribute String serviceToken)
             throws InstanceNotFoundException {
         // Inicia sesión en el servicio
         UserProfile user = userService.loginFromServiceToken(userID);
         
         // Devuelve los datos del usuario junto al token recibido
-        return UserConversor.toAuthenticatedUserDTO(user, token);
+        return UserConversor.toAuthenticatedUserDTO(user, serviceToken);
     }
     
     
