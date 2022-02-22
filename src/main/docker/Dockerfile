@@ -11,4 +11,4 @@ COPY . /deploy
 WORKDIR /deploy/target
 
 # Comando para arrancar aplicación
-CMD java -Dserver.port=$PORT $JAVA_OPTS -jar groupeo-*.jar
+CMD java -Dserver.port=$PORT $JAVA_OPTS -jar groupeo-*.jar -XX:+UseContainerSupport
