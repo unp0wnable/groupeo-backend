@@ -64,16 +64,16 @@ public class UserController {
     public ResponseEntity<AuthenticatedUserDto> signUp(@Validated @RequestBody SignUpParamsDto params)
             throws InstanceAlreadyExistsException {
         // Parsear datos del usuario recibidos en el DTO y registrar al usuario en el servicio
-        UserProfile user = UserConversor.fromSignUpParamsDTO(params);
-        userService.signUp(user);
+        UserProfile parsedUser = UserConversor.fromSignUpParamsDTO(params);
+        UserProfile signedUpUser = userService.signUp(parsedUser);
         
         // Genera los datos que contendrá la respuesta
         URI resourceLocation = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{userId}")
-                .buildAndExpand(user.getUserProfileID())
+                .buildAndExpand(signedUpUser.getUserProfileID())
                 .toUri();
-        String token = generateServiceTokenForUser(user);
-        AuthenticatedUserDto authUserDto = UserConversor.toAuthenticatedUserDTO(user, token);
+        String token = generateServiceTokenForUser(signedUpUser);
+        AuthenticatedUserDto authUserDto = UserConversor.toAuthenticatedUserDTO(signedUpUser, token);
         
         // Crea la respuesta HTTP y la envía
         ResponseEntity<AuthenticatedUserDto> response = ResponseEntity

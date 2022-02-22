@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface UserService {
 
-    void signUp(UserProfile profile) throws InstanceAlreadyExistsException;
+    UserProfile signUp(UserProfile profile) throws InstanceAlreadyExistsException;
     
     UserProfile login(String nickName, String rawPassword) throws IncorrectLoginException;
     
