@@ -21,6 +21,8 @@ import java.util.Set;
 public class JwtFilter extends BasicAuthenticationFilter {
     public static final String AUTH_TOKEN_PREFIX = "Bearer ";
     private static final String ROLE_PREFIX = "ROLE_";
+    private static final String SERVICE_TOKEN_ATTRIBUTE_NAME = "serviceToken";
+    private static final String USER_ID_ATTRIBUTE_NAME = "userID";
     
     private final JwtGenerator jwtGenerator;
     
@@ -63,8 +65,8 @@ public class JwtFilter extends BasicAuthenticationFilter {
         
         // Si se obtienen los datos, se registran
         if (data != null) {
-            request.setAttribute("token", token);
-            request.setAttribute("userId", data.getUserID());
+            request.setAttribute(SERVICE_TOKEN_ATTRIBUTE_NAME, token);
+            request.setAttribute(USER_ID_ATTRIBUTE_NAME, data.getUserID());
             // Asigna rol al usuario
             Set<GrantedAuthority> authorities = new HashSet<>();
             authorities.add(new SimpleGrantedAuthority(ROLE_PREFIX + data.getRole()));
