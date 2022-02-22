@@ -32,7 +32,7 @@ spring:
 
 server:
   servlet:
-    context-path: @project.contextPath@
+    context-path: '@project.contextPath@'
 
 project:
   jwt:

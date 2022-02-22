@@ -34,6 +34,7 @@ public class UserProfile {
     @Column(name = "email", length = 100, nullable = false, unique = true)
     private String email;
     
+    @Temporal(TemporalType.DATE)
     @Column(name = "birthDate", nullable = false)
     private Date birthDate;
     

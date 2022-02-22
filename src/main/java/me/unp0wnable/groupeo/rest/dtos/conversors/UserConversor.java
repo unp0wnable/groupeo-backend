@@ -10,22 +10,19 @@ import me.unp0wnable.groupeo.rest.dtos.users.*;
 public class UserConversor {
     /* ******************** Convertir a DTO ******************** */
     public static UserDto toUserDto(UserProfile user) {
-        UserDto dto = new UserDto(
-                user.getUserProfileID(),
-                user.getFirstName(),
-                user.getSurname1(),
-                user.getSurname2(),
-                user.getEmail(),
-                user.getBirthDate(),
-                user.getJoinDate(),
-                user.getDescription(),
-                user.getNickName(),
-                user.getScore(),
-                user.getRole().toString()
-        );
-        dto.setPassword(user.getPassword());
-        // Agrega valores optativos si están disponibles
-        if (user.getImageB64() != null) dto.setImageB64(user.getImageB64());
+        UserDto dto = new UserDto();
+        dto.setUserID(user.getUserProfileID());
+        dto.setFirstName(user.getFirstName());
+        dto.setSurname1(user.getSurname1());
+        dto.setSurname2(user.getSurname2());
+        dto.setEmail(user.getEmail());
+        dto.setBirthDate(user.getBirthDate());
+        dto.setJoinDate(user.getJoinDate());
+        dto.setDescription(user.getDescription());
+        dto.setNickName(user.getNickName());
+        dto.setScore(user.getScore());
+        dto.setRole(user.getRole().toString());
+        dto.setImageB64(user.getImageB64());
         
         
         return dto;

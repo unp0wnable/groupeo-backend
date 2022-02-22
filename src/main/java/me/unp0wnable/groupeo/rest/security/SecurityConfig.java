@@ -28,14 +28,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilter(jwtAuthFilter).authorizeRequests()
                 // ACCOUNTS ENDPOINTS
-                .antMatchers(HttpMethod.POST,   "/users/signUp").permitAll()                    // signUp
-                .antMatchers(HttpMethod.POST,   "/users/login").permitAll()                     // login
-                .antMatchers(HttpMethod.POST,   "/users/tokenLogin").permitAll()                // loginFromServiceToken
-                .antMatchers(HttpMethod.POST,   "/users/*/changePassword").permitAll()          // changePassword
-                .antMatchers(HttpMethod.PUT,    "/users/*/update").permitAll()                  // updateUserProfile
-                .antMatchers(HttpMethod.POST,    "/users/*/address").permitAll()                // assignAddressToUser
-                .antMatchers(HttpMethod.PUT,    "/users/*/address").permitAll()                 // updateUserAddress
-                .antMatchers(HttpMethod.DELETE, "/users/*").permitAll()                         // deleteUser
+                .antMatchers(HttpMethod.POST,   "/api/users/signUp").permitAll()                    // signUp
+                .antMatchers(HttpMethod.POST,   "/api//users/login").permitAll()                     // login
+                .antMatchers(HttpMethod.POST,   "/api//users/tokenLogin").permitAll()                // loginFromServiceToken
+                .antMatchers(HttpMethod.POST,   "/api//users/*/changePassword").permitAll()          // changePassword
+                .antMatchers(HttpMethod.PUT,    "/api//users/*/update").permitAll()                  // updateUserProfile
+                .antMatchers(HttpMethod.POST,    "/api//users/*/address").permitAll()                // assignAddressToUser
+                .antMatchers(HttpMethod.PUT,    "/api//users/*/address").permitAll()                 // updateUserAddress
+                .antMatchers(HttpMethod.DELETE, "/api//users/*").permitAll()                         // deleteUser
                 // EVENTS ENDPOINTS
                 
                 // DENY ALL UNAUTHORIZED REQUESTS
