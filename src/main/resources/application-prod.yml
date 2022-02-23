@@ -1,0 +1,12 @@
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: error
+
+spring:
+  datasource:
+    url: jdbc:postgresql://ec2-34-250-92-138.eu-west-1.compute.amazonaws.com:5432/dcohlnrm1bitck
+    username: amnywvygqxeyfz
+    password: 18f623a49d97d3939a2491e5b906f582b25a7b71ff462a783056c2325ad409aa
+

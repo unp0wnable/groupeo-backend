@@ -19,6 +19,7 @@ target/
 *.iws
 *.iml
 *.ipr
+.jpb/
 
 
 ### VS Code ###
@@ -39,3 +40,7 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+
+!src/main/resources/application-dev.yml
+!src/test/resources/application-test.yml
+!src/main/docker/**

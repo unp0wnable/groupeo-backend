@@ -1,0 +1,54 @@
+# Acción para escanear la calidad del código
+name: Quality Assurance.
+on:
+  # Al pushear a ramas relevantes (desarrollo, despliegue y rama principal)
+  push:
+    branches:
+      - features/**
+      - develop
+      - release
+      - main
+  # O al abrir una nueva PR
+  pull_request:
+    types:
+      - opened
+jobs:
+  # Analizar el código en los servidores de SonarCloud
+  analyze:
+    name: Scan code quality through SonarCloud.
+    runs-on: ubuntu-20.04
+    steps:
+      # Permisos para manipular repositorio
+      - name: Checkout code.
+        uses: actions/checkout@v2
+        with:
+          fetch-depth : 0
+
+      # Configurar JAVA 11 en la máquina de referencia
+      - name: Set up JDK 11.
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      # Copiar código a la caché de SonarCloud
+      - name: Cache SonarCloud packages.
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os}}-sonar
+
+      # Cachear dependencias de Maven
+      - name: Cache Maven packages.
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}
+
+      # Compilar código y analizarlo
+      - name: Build and analyze code.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Needed to get PR data, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=unp0wnable_groupeo-backend -Ptest
