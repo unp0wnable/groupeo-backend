@@ -32,8 +32,8 @@ public class UserController {
     MessageSource messageSource;
     
     /* ********************************************* EXCEPTION HANDLERS ********************************************* */
-    private static final String INCORRECT_LOGIN_EXCEPTION_KEY = "project.exceptions.IncorrectLoginException";
-    private static final String INCORRECT_PASSWORD_EXCEPTION_KEY = "project.exceptions.IncorrectPasswordException";
+    private static final String INCORRECT_LOGIN_EXCEPTION_KEY = "project.exceptions.user.IncorrectLoginException";
+    private static final String INCORRECT_PASSWORD_EXCEPTION_KEY = "project.exceptions.user.IncorrectPasswordException";
     
     
     @ExceptionHandler(IncorrectLoginException.class)

@@ -51,13 +51,13 @@ public class UserServiceImpl implements UserService {
         // Comprobar si existe el usuario recibido
         Optional<UserProfile> optionalUser = userProfileRepository.findByNickNameIgnoreCase(nickName);
         if ( optionalUser.isEmpty() ) {
-            throw new IncorrectLoginException(nickName, rawPassword);
+            throw new IncorrectLoginException();
         }
         UserProfile user = optionalUser.get();
         
         // Comprobar si las contraseñas coinciden
         if ( !passwordEncoder.matches(rawPassword, user.getPassword()) ) {
-            throw new IncorrectLoginException(user.getNickName(), rawPassword);
+            throw new IncorrectLoginException();
         }
         
         return user;
