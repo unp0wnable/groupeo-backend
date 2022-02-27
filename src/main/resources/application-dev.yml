@@ -7,5 +7,5 @@ logging:
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/groupeo
-    username: groupeo
+    username: ${USER}
     password: rucbanfm

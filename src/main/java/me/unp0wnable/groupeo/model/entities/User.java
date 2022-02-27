@@ -1,6 +1,6 @@
 package me.unp0wnable.groupeo.model.entities;
 
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -8,10 +8,13 @@ import javax.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "UserProfile")
-public class UserProfile {
+public class User {
     public enum UserRoles {ADMIN, USER}
     
     
@@ -59,7 +62,7 @@ public class UserProfile {
     @Column(name = "role")
     private UserRoles role;
     
-    @OneToOne(mappedBy = "userProfile",
+    @OneToOne(mappedBy = "user",
             fetch = FetchType.LAZY,
             cascade = CascadeType.PERSIST,
             orphanRemoval = true)

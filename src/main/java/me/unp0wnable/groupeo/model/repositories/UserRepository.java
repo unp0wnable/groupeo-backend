@@ -1,12 +1,12 @@
 package me.unp0wnable.groupeo.model.repositories;
 
-import me.unp0wnable.groupeo.model.entities.UserProfile;
+import me.unp0wnable.groupeo.model.entities.User;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserProfileRepository extends PagingAndSortingRepository<UserProfile, UUID> {
+public interface UserRepository extends PagingAndSortingRepository<User, UUID> {
     
     /**
      * Comprueba si existe un usuario por su nombre
@@ -20,7 +20,7 @@ public interface UserProfileRepository extends PagingAndSortingRepository<UserPr
      * @param nickName Nickname del usuario a buscar
      * @return Usuario encontrado
      */
-    Optional<UserProfile> findByNickNameIgnoreCase(String nickName);
+    Optional<User> findByNickNameIgnoreCase(String nickName);
     
     
 }

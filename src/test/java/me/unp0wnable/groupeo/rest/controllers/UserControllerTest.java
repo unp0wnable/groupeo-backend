@@ -1,11 +1,11 @@
 package me.unp0wnable.groupeo.rest.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.unp0wnable.groupeo.model.entities.User;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
 import me.unp0wnable.groupeo.model.exceptions.IncorrectLoginException;
 import me.unp0wnable.groupeo.model.repositories.UserAddressRepository;
-import me.unp0wnable.groupeo.model.repositories.UserProfileRepository;
+import me.unp0wnable.groupeo.model.repositories.UserRepository;
 import me.unp0wnable.groupeo.rest.dtos.conversors.UserConversor;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
 import me.unp0wnable.groupeo.rest.http.jwt.JwtData;
@@ -51,7 +51,7 @@ public class UserControllerTest {
     private BCryptPasswordEncoder passwordEncoder;
     
     @Autowired
-    private UserProfileRepository userProfileRepository;
+    private UserRepository userRepository;
     
     @Autowired
     private UserAddressRepository userAddressRepository;
@@ -62,11 +62,11 @@ public class UserControllerTest {
     private AuthenticatedUserDto createAuthenticatedUser(String nickName)
             throws IncorrectLoginException {
         // Crea un usuario válido
-        UserProfile user = generateValidUser(nickName);
+        User user = generateValidUser(nickName);
         user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
         
         // Guarda el usuario en la base de datos
-        userProfileRepository.save(user);
+        userRepository.save(user);
         
         // Genera el DTO con los datos del usuario recién creado
         LoginParamsDto loginParamsDto = new LoginParamsDto();
@@ -76,7 +76,7 @@ public class UserControllerTest {
         return userController.login(loginParamsDto);
     }
     
-    private AddressDto createAddressForUser(UserProfile user) {
+    private AddressDto createAddressForUser(User user) {
         // Crea una dirección válida
         UserAddress address = generateValidAddressForUser(user);
         //address.setUserProfile(user);
@@ -90,7 +90,7 @@ public class UserControllerTest {
     
     /** Crea un DTO con los datos necesarios para registrar un usuario válido */
     private SignUpParamsDto generateSignUpParamsDto( ) {
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         SignUpParamsDto signUpParams = new SignUpParamsDto();
         signUpParams.setFirstName(user.getFirstName());
         signUpParams.setSurname1(user.getSurname1());
@@ -327,7 +327,7 @@ public class UserControllerTest {
         // Crear datos de prueba
         AuthenticatedUserDto authUserDto = createAuthenticatedUser(DEFAULT_NICKNAME);
         //Elimina al usuario recién creado para que no exista en el servicio
-        userProfileRepository.deleteById(authUserDto.getUserDTO().getUserID());
+        userRepository.deleteById(authUserDto.getUserDTO().getUserID());
         ChangePasswordParamsDto paramsDto = new ChangePasswordParamsDto();
         paramsDto.setOldPassword(DEFAULT_PASSWORD);
         paramsDto.setNewPassword(DEFAULT_PASSWORD);
@@ -442,7 +442,7 @@ public class UserControllerTest {
         // Crear datos de prueba
         AuthenticatedUserDto authUserDto = createAuthenticatedUser(DEFAULT_NICKNAME);
         //Elimina al usuario recién creado para que no exista en el servicio
-        userProfileRepository.deleteById(authUserDto.getUserDTO().getUserID());
+        userRepository.deleteById(authUserDto.getUserDTO().getUserID());
         UpdateProfileParamsDto paramsDto = new UpdateProfileParamsDto();
         paramsDto.setFirstName(authUserDto.getUserDTO().getFirstName() + "XXX");
         paramsDto.setSurname1(authUserDto.getUserDTO().getSurname1() + "XXX");
@@ -524,7 +524,7 @@ public class UserControllerTest {
     public void testUpdateAddress_PUT() throws Exception {
         // Crear datos de prueba
         AuthenticatedUserDto authUserDto = createAuthenticatedUser(DEFAULT_NICKNAME);
-        UserProfile user = UserConversor.fromUserDTO(authUserDto.getUserDTO());
+        User user = UserConversor.fromUserDTO(authUserDto.getUserDTO());
         AddressDto paramsDto = createAddressForUser(user);
         String userID = authUserDto.getUserDTO().getUserID().toString();
         paramsDto.setAddressID(paramsDto.getAddressID());
@@ -556,7 +556,7 @@ public class UserControllerTest {
         // Crear datos de prueba
         AuthenticatedUserDto currentUserDto = createAuthenticatedUser("currentUser");
         AuthenticatedUserDto targetUserDto = createAuthenticatedUser("targetUser");
-        UserProfile currentUser = UserConversor.fromUserDTO(currentUserDto.getUserDTO());
+        User currentUser = UserConversor.fromUserDTO(currentUserDto.getUserDTO());
         AddressDto paramsDto = createAddressForUser(currentUser);
         String currentUserID = currentUserDto.getUserDTO().getUserID().toString();
         String targetUserID = targetUserDto.getUserDTO().getUserID().toString();
@@ -606,7 +606,7 @@ public class UserControllerTest {
         // Crear datos de prueba
         AuthenticatedUserDto authUserDto = createAuthenticatedUser(DEFAULT_NICKNAME);
         //Elimina al usuario recién creado para que no exista en el servicio
-        userProfileRepository.deleteById(authUserDto.getUserDTO().getUserID());
+        userRepository.deleteById(authUserDto.getUserDTO().getUserID());
         String userID = authUserDto.getUserDTO().getUserID().toString();
         String endpointAddress = API_ENDPOINT + "/" + userID;
         

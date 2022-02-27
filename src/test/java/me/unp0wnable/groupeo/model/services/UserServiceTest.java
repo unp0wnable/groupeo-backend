@@ -1,7 +1,7 @@
 package me.unp0wnable.groupeo.model.services;
 
+import me.unp0wnable.groupeo.model.entities.User;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
 import me.unp0wnable.groupeo.model.exceptions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +27,12 @@ public class UserServiceTest {
     public void testSignUpAndLoginUsingID()
             throws InstanceAlreadyExistsException, InstanceNotFoundException {
         // Crear datos de prueba
-        UserProfile createdUser = generateValidUser(DEFAULT_NICKNAME);
+        User createdUser = generateValidUser(DEFAULT_NICKNAME);
         
         
         // Ejecutar funcionalidades
         userService.signUp(createdUser);
-        UserProfile loggedInUser = userService.loginFromServiceToken(createdUser.getUserProfileID());
+        User loggedInUser = userService.loginFromServiceToken(createdUser.getUserProfileID());
         
         
         // Comprobar resultados
@@ -42,8 +42,8 @@ public class UserServiceTest {
     @Test
     public void testSignUpTwice() throws InstanceAlreadyExistsException {
         // Crear datos de prueba
-        UserProfile user1 = generateValidUser(DEFAULT_NICKNAME);
-        UserProfile user2 = generateValidUser(DEFAULT_NICKNAME);
+        User user1 = generateValidUser(DEFAULT_NICKNAME);
+        User user2 = generateValidUser(DEFAULT_NICKNAME);
         
         // Ejecutar funcionalidades
         userService.signUp(user1);
@@ -55,12 +55,12 @@ public class UserServiceTest {
     @Test
     public void testLogin() throws InstanceAlreadyExistsException, IncorrectLoginException {
         // Crear datos de prueba
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         String clearPassword = user.getPassword();
         
         // Ejecutar funcionalidades
         userService.signUp(user);
-        UserProfile loggedInUser = userService.login(DEFAULT_NICKNAME, clearPassword);
+        User loggedInUser = userService.login(DEFAULT_NICKNAME, clearPassword);
         
         // Comprobar resultados
         assertEquals(user.getNickName(), loggedInUser.getNickName());
@@ -69,7 +69,7 @@ public class UserServiceTest {
     @Test
     public void testLoginWithIncorrectPassword() throws InstanceAlreadyExistsException {
         // Crear datos de prueba
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         String clearPassword = user.getPassword();
         
         // Ejecutar funcionalidades
@@ -84,7 +84,7 @@ public class UserServiceTest {
     @Test
     public void testLoginWithNonExistenUser() {
         // Crear datos de prueba
-        UserProfile nonExistentUser = generateValidUser(NON_EXISTENT_NICKNAME);
+        User nonExistentUser = generateValidUser(NON_EXISTENT_NICKNAME);
         String clearPassword = nonExistentUser.getPassword();
         
         // Comprobar resultados
@@ -105,7 +105,7 @@ public class UserServiceTest {
     public void testChangePassword()
             throws InstanceAlreadyExistsException, IncorrectPasswordExcepion, InstanceNotFoundException {
         // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         String oldPassword = user.getPassword();
         String newPassword = user.getPassword() + 'X';
         
@@ -122,7 +122,7 @@ public class UserServiceTest {
     @Test
     public void testChangePasswordToNonExistingUser() throws InstanceAlreadyExistsException {
         // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         String oldPassword = user.getPassword();
         String newPassword = oldPassword + "X";
     
@@ -150,7 +150,7 @@ public class UserServiceTest {
     @Test
     public void testUpdateProfile() throws InstanceAlreadyExistsException, InstanceNotFoundException {
         // Generar datos
-        UserProfile originalUser = generateValidUser(DEFAULT_NICKNAME);
+        User originalUser = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(originalUser);
         UUID userID = originalUser.getUserProfileID();
         
@@ -163,14 +163,14 @@ public class UserServiceTest {
         userService.updateUserProfile(userID, originalUser);
         
         // Comprobar resultados
-        UserProfile updatedUser = userService.loginFromServiceToken(userID);
+        User updatedUser = userService.loginFromServiceToken(userID);
         assertEquals(originalUser, updatedUser);
     }
     
     @Test
     public void testUpdateProfileOfNonExistentUser() {
         // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         
         // Comprobar resultados
         assertThrows(InstanceNotFoundException.class,
@@ -181,7 +181,7 @@ public class UserServiceTest {
     @Test
     public void testAssignAddressToUser() throws InstanceAlreadyExistsException, InstanceNotFoundException {
         // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(user);                           // Registrar usuario antes para obtener su ID
         UserAddress generatedAddress = generateValidAddressForUser(user);
         
@@ -190,7 +190,7 @@ public class UserServiceTest {
         UserAddress assignedAddress = userService.assignAddressToUser(userID, generatedAddress);
         
         // Comprobar resultados
-        assertEquals(assignedAddress.getUserProfile(), user);
+        assertEquals(assignedAddress.getUser(), user);
         assertEquals(generatedAddress.getCity(), assignedAddress.getCity());
         assertEquals(generatedAddress.getRegion(), assignedAddress.getRegion());
         assertEquals(generatedAddress.getPostalCode(), assignedAddress.getPostalCode());
@@ -200,7 +200,7 @@ public class UserServiceTest {
     @Test
     public void testUpdateUserAddress() throws InstanceAlreadyExistsException, InstanceNotFoundException {
         // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(user);                           // Registrar usuario antes para obtener su ID
         UserAddress generatedAddress = generateValidAddressForUser(user);
         UUID userID = user.getUserProfileID();
@@ -221,7 +221,7 @@ public class UserServiceTest {
     
     public void testAssignAddressOfNonExistingUser() {
         // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         UserAddress address = generateValidAddressForUser(user);
         
         // Comprobar resultados
@@ -233,7 +233,7 @@ public class UserServiceTest {
      @Test
     public void testDeleteUser() throws InstanceAlreadyExistsException, InstanceNotFoundException {
         // Generar datos
-        UserProfile user = generateValidUser(DEFAULT_NICKNAME);
+        User user = generateValidUser(DEFAULT_NICKNAME);
         
         // Ejecutar funcionalidades
         userService.signUp(user);

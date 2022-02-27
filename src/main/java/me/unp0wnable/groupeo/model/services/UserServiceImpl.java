@@ -1,11 +1,11 @@
 package me.unp0wnable.groupeo.model.services;
 
+import me.unp0wnable.groupeo.model.entities.User;
+import me.unp0wnable.groupeo.model.entities.User.UserRoles;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
 import me.unp0wnable.groupeo.model.exceptions.*;
 import me.unp0wnable.groupeo.model.repositories.UserAddressRepository;
-import me.unp0wnable.groupeo.model.repositories.UserProfileRepository;
+import me.unp0wnable.groupeo.model.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.*;
 public class UserServiceImpl implements UserService {
     /* ***************************** DEPENDENCIES INJECTION ***************************** */
     @Autowired
-    private UserProfileRepository userProfileRepository;
+    private UserRepository userRepository;
     @Autowired
     private UserAddressRepository userAddressRepository;
     @Autowired
@@ -26,10 +26,10 @@ public class UserServiceImpl implements UserService {
     
     /* *********************************** USE CASES *********************************** */
     @Override
-    public UserProfile signUp(UserProfile profile) throws InstanceAlreadyExistsException {
+    public User signUp(User profile) throws InstanceAlreadyExistsException {
         // Comprobar si ya existe un usuario con el mismo nick
-        if (userProfileRepository.existsByNickName(profile.getNickName())) {
-            throw new InstanceAlreadyExistsException(UserProfile.class.getName(), profile.getNickName());
+        if ( userRepository.existsByNickName(profile.getNickName())) {
+            throw new InstanceAlreadyExistsException(User.class.getName(), profile.getNickName());
         }
         
         // Asignar datos por defecto del usuario
@@ -42,18 +42,18 @@ public class UserServiceImpl implements UserService {
         profile.setRole(UserRoles.USER);
         
         // Guardar datos de usuario recién creado
-        return userProfileRepository.save(profile);
+        return userRepository.save(profile);
     }
     
     @Override
     @Transactional(readOnly = true)
-    public UserProfile login(String nickName, String rawPassword) throws IncorrectLoginException {
+    public User login(String nickName, String rawPassword) throws IncorrectLoginException {
         // Comprobar si existe el usuario recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findByNickNameIgnoreCase(nickName);
+        Optional<User> optionalUser = userRepository.findByNickNameIgnoreCase(nickName);
         if ( optionalUser.isEmpty() ) {
             throw new IncorrectLoginException(nickName, rawPassword);
         }
-        UserProfile user = optionalUser.get();
+        User user = optionalUser.get();
         
         // Comprobar si las contraseñas coinciden
         if ( !passwordEncoder.matches(rawPassword, user.getPassword()) ) {
@@ -65,11 +65,11 @@ public class UserServiceImpl implements UserService {
     
     @Override
     @Transactional(readOnly = true)
-    public UserProfile loginFromServiceToken(UUID userID) throws InstanceNotFoundException {
+    public User loginFromServiceToken(UUID userID) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
+        Optional<User> optionalUser = userRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
+            throw new InstanceNotFoundException(User.class.getName(), userID);
         }
         return optionalUser.get();
     }
@@ -77,11 +77,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(UUID userID, String oldPassword, String newPassword) throws InstanceNotFoundException, IncorrectPasswordExcepion {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
+        Optional<User> optionalUser = userRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
+            throw new InstanceNotFoundException(User.class.getName(), userID);
         }
-        UserProfile user = optionalUser.get();
+        User user = optionalUser.get();
         
         // Comprobar que contraseñas coincidan
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
@@ -89,17 +89,17 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         
-        userProfileRepository.save(user);
+        userRepository.save(user);
     }
     
     @Override
-    public UserProfile updateUserProfile(UUID userID, UserProfile profile) throws InstanceNotFoundException {
+    public User updateUserProfile(UUID userID, User profile) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
+        Optional<User> optionalUser = userRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
+            throw new InstanceNotFoundException(User.class.getName(), userID);
         }
-        UserProfile user = optionalUser.get();
+        User user = optionalUser.get();
         
         // Comprobar qué datos se han modificado y actualizarlos
         if ((profile.getFirstName() != null) && !profile.getFirstName().equals(user.getFirstName()))
@@ -113,21 +113,21 @@ public class UserServiceImpl implements UserService {
         if ((profile.getDescription() != null) && !profile.getDescription().equals(user.getDescription()))
             user.setDescription(profile.getDescription());
 
-        return userProfileRepository.save(user);
+        return userRepository.save(user);
     }
     
     @Override
     public UserAddress assignAddressToUser(UUID userID, UserAddress address) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
+        Optional<User> optionalUser = userRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
+            throw new InstanceNotFoundException(User.class.getName(), userID);
         }
-        UserProfile user = optionalUser.get();
+        User user = optionalUser.get();
         
         // Asigna la dirección al usuario
         user.setAddress(address);
-        UserProfile updatedUser = userProfileRepository.save(user);
+        User updatedUser = userRepository.save(user);
         
         return updatedUser.getAddress();
     }
@@ -135,13 +135,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(UUID userID) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
-        Optional<UserProfile> optionalUser = userProfileRepository.findById(userID);
+        Optional<User> optionalUser = userRepository.findById(userID);
         if ( optionalUser.isEmpty() ) {
-            throw new InstanceNotFoundException(UserProfile.class.getName(), userID);
+            throw new InstanceNotFoundException(User.class.getName(), userID);
         }
         
         // Eliminar al usuario
-        userProfileRepository.deleteById(userID);
+        userRepository.deleteById(userID);
     }
     
     

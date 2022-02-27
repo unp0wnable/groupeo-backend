@@ -1,9 +1,9 @@
 package me.unp0wnable.groupeo.utils;
 
 import lombok.experimental.UtilityClass;
+import me.unp0wnable.groupeo.model.entities.User;
+import me.unp0wnable.groupeo.model.entities.User.UserRoles;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -20,19 +20,19 @@ public class TestGenerator {
     public static final String DEFAULT_PASSWORD = "password";
     
     
-    public static UserAddress generateValidAddressForUser(UserProfile user) {
+    public static UserAddress generateValidAddressForUser(User user) {
         UserAddress address = new UserAddress();
         address.setCity("A Coruña");
         address.setRegion("Galicia");
         address.setPostalCode("15000");
         address.setCountry("España");
-        address.setUserProfile(user);
+        address.setUser(user);
         
         return address;
     }
     
-    public static UserProfile generateValidUser(String nickName) {
-        UserProfile user = new UserProfile();
+    public static User generateValidUser(String nickName) {
+        User user = new User();
         //user.setUserProfileID(UUID.fromString("00000001-0000-4000-8000-000000000001"));
         user.setFirstName("FirstName");
         user.setSurname1("Surname1");
@@ -50,8 +50,8 @@ public class TestGenerator {
         return user;
     }
     
-    public static UserProfile generateAdmin() {
-        UserProfile admin = generateValidUser("ADMIN");
+    public static User generateAdmin() {
+        User admin = generateValidUser("ADMIN");
         admin.setJoinDate(parseDate("2022-02-02"));
         admin.setDescription("I am the administrator of the system");
         admin.setRole(UserRoles.ADMIN);

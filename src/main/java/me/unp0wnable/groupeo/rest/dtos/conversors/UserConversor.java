@@ -1,15 +1,15 @@
 package me.unp0wnable.groupeo.rest.dtos.conversors;
 
 import lombok.experimental.UtilityClass;
+import me.unp0wnable.groupeo.model.entities.User;
+import me.unp0wnable.groupeo.model.entities.User.UserRoles;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
 
 @UtilityClass
 public class UserConversor {
     /* ******************** Convertir a DTO ******************** */
-    public static UserDto toUserDto(UserProfile user) {
+    public static UserDto toUserDto(User user) {
         UserDto dto = new UserDto(
                 user.getUserProfileID(),
                 user.getFirstName(),
@@ -42,14 +42,14 @@ public class UserConversor {
         return dto;
     }
     
-    public static AuthenticatedUserDto toAuthenticatedUserDTO(UserProfile user, String token) {
+    public static AuthenticatedUserDto toAuthenticatedUserDTO(User user, String token) {
         return new AuthenticatedUserDto(token, toUserDto(user));
     }
     
 
     /* ******************** Convertir a Entidades ******************** */
-    public static UserProfile fromUserDTO(UserDto dto) {
-        UserProfile user = new UserProfile();
+    public static User fromUserDTO(UserDto dto) {
+        User user = new User();
         user.setUserProfileID(dto.getUserID());
         user.setFirstName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
@@ -67,8 +67,8 @@ public class UserConversor {
         return user;
     }
     
-    public static UserProfile fromSignUpParamsDTO(SignUpParamsDto dto) {
-        UserProfile user = new UserProfile();
+    public static User fromSignUpParamsDTO(SignUpParamsDto dto) {
+        User user = new User();
         user.setFirstName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());
@@ -82,8 +82,8 @@ public class UserConversor {
         return user;
     }
     
-    public static UserProfile fromUpdateProfileParamsDTO(UpdateProfileParamsDto dto) {
-        UserProfile user = new UserProfile();
+    public static User fromUpdateProfileParamsDTO(UpdateProfileParamsDto dto) {
+        User user = new User();
         user.setNickName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());

@@ -1,7 +1,7 @@
 package me.unp0wnable.groupeo.rest.controllers;
 
+import me.unp0wnable.groupeo.model.entities.User;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
 import me.unp0wnable.groupeo.model.exceptions.*;
 import me.unp0wnable.groupeo.model.services.UserService;
 import me.unp0wnable.groupeo.rest.dtos.conversors.UserConversor;
@@ -64,8 +64,8 @@ public class UserController {
     public ResponseEntity<AuthenticatedUserDto> signUp(@Validated @RequestBody SignUpParamsDto params)
             throws InstanceAlreadyExistsException {
         // Parsear datos del usuario recibidos en el DTO y registrar al usuario en el servicio
-        UserProfile parsedUser = UserConversor.fromSignUpParamsDTO(params);
-        UserProfile signedUpUser = userService.signUp(parsedUser);
+        User parsedUser = UserConversor.fromSignUpParamsDTO(params);
+        User signedUpUser = userService.signUp(parsedUser);
         
         // Genera los datos que contendrá la respuesta
         URI resourceLocation = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -88,7 +88,7 @@ public class UserController {
     @PostMapping("/login")
     public AuthenticatedUserDto login(@Validated @RequestBody LoginParamsDto params) throws IncorrectLoginException {
         // Inicia sesión en el servicio
-        UserProfile user = userService.login(params.getNickName(), params.getPassword());
+        User user = userService.login(params.getNickName(), params.getPassword());
         
         // Genera el token para el usuario
         String token = generateServiceTokenForUser(user);
@@ -102,7 +102,7 @@ public class UserController {
     public AuthenticatedUserDto loginUsingServiceToken(@RequestAttribute UUID userID, @RequestAttribute String token)
             throws InstanceNotFoundException {
         // Inicia sesión en el servicio
-        UserProfile user = userService.loginFromServiceToken(userID);
+        User user = userService.loginFromServiceToken(userID);
         
         // Devuelve los datos del usuario junto al token recibido
         return UserConversor.toAuthenticatedUserDTO(user, token);
@@ -134,8 +134,8 @@ public class UserController {
         }
         
         // Actualizar perfil en el servicio
-        UserProfile userData = UserConversor.fromUpdateProfileParamsDTO(params);
-        UserProfile updatedUser = userService.updateUserProfile(userID, userData);
+        User userData = UserConversor.fromUpdateProfileParamsDTO(params);
+        User updatedUser = userService.updateUserProfile(userID, userData);
         
         // Generar respuesta
         return UserConversor.toUserDto(updatedUser);
@@ -180,7 +180,7 @@ public class UserController {
     
     /* ************************************************* AUX METHODS ************************************************* */
     /** Genera un JWT para el usuario actual */
-    private String generateServiceTokenForUser(UserProfile user) {
+    private String generateServiceTokenForUser(User user) {
         JwtData jwtData = new JwtData(user.getUserProfileID(), user.getNickName(), user.getRole().toString());
         
         return jwtGenerator.generateJWT(jwtData);
