@@ -1,12 +1,12 @@
 package me.unp0wnable.groupeo.model.entities;
 
 import lombok.*;
+import me.unp0wnable.groupeo.model.constants.UserRoles;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -15,15 +15,12 @@ import java.util.UUID;
 @Entity
 @Table(name = "UserProfile")
 public class User {
-    public enum UserRoles {ADMIN, USER}
-    
-    
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "org.hibernate.type.PostgresUUIDType")
     @Column(name = "userProfileID", nullable = false)
-    private UUID userProfileID;
+    private UUID userID;
     
     @Column(name = "firstName", length = 30, nullable = false)
     private String firstName;
@@ -59,6 +56,7 @@ public class User {
     @Column(name = "score")
     private Float score;
     
+    @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private UserRoles role;
     
@@ -67,4 +65,6 @@ public class User {
             cascade = CascadeType.PERSIST,
             orphanRemoval = true)
     private UserAddress address;
+    
+    
 }

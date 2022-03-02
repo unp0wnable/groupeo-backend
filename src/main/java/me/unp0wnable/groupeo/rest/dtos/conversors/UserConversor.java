@@ -1,8 +1,8 @@
 package me.unp0wnable.groupeo.rest.dtos.conversors;
 
 import lombok.experimental.UtilityClass;
+import me.unp0wnable.groupeo.model.constants.UserRoles;
 import me.unp0wnable.groupeo.model.entities.User;
-import me.unp0wnable.groupeo.model.entities.User.UserRoles;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
 
@@ -11,7 +11,7 @@ public class UserConversor {
     /* ******************** Convertir a DTO ******************** */
     public static UserDto toUserDto(User user) {
         UserDto dto = new UserDto(
-                user.getUserProfileID(),
+                user.getUserID(),
                 user.getFirstName(),
                 user.getSurname1(),
                 user.getSurname2(),
@@ -50,7 +50,7 @@ public class UserConversor {
     /* ******************** Convertir a Entidades ******************** */
     public static User fromUserDTO(UserDto dto) {
         User user = new User();
-        user.setUserProfileID(dto.getUserID());
+        user.setUserID(dto.getUserID());
         user.setFirstName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());

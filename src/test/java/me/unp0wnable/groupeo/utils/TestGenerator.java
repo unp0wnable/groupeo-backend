@@ -33,7 +33,7 @@ public class TestGenerator {
     
     public static User generateValidUser(String nickName) {
         User user = new User();
-        //user.setUserProfileID(UUID.fromString("00000001-0000-4000-8000-000000000001"));
+        //user.setUserID(UUID.fromString("00000001-0000-4000-8000-000000000001"));
         user.setFirstName("FirstName");
         user.setSurname1("Surname1");
         user.setSurname2("Surname2");

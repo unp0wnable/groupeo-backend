@@ -32,7 +32,7 @@ public class UserServiceTest {
         
         // Ejecutar funcionalidades
         userService.signUp(createdUser);
-        User loggedInUser = userService.loginFromServiceToken(createdUser.getUserProfileID());
+        User loggedInUser = userService.loginFromServiceToken(createdUser.getUserID());
         
         
         // Comprobar resultados
@@ -111,7 +111,7 @@ public class UserServiceTest {
         
         // Ejecutar funcionalidades
         userService.signUp(user);
-        userService.changePassword(user.getUserProfileID(), oldPassword, newPassword);
+        userService.changePassword(user.getUserID(), oldPassword, newPassword);
         
         // Comprobar resultados
         assertDoesNotThrow(
@@ -131,7 +131,7 @@ public class UserServiceTest {
         
         // Comprobar resultados
         assertThrows(IncorrectPasswordExcepion.class,
-            () -> userService.changePassword(user.getUserProfileID(), "Y" + oldPassword, newPassword)
+            () -> userService.changePassword(user.getUserID(), "Y" + oldPassword, newPassword)
         );
     }
     
@@ -152,7 +152,7 @@ public class UserServiceTest {
         // Generar datos
         User originalUser = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(originalUser);
-        UUID userID = originalUser.getUserProfileID();
+        UUID userID = originalUser.getUserID();
         
         // Ejecutar funcionalidades
         originalUser.setFirstName(originalUser.getFirstName() + "X");
@@ -186,7 +186,7 @@ public class UserServiceTest {
         UserAddress generatedAddress = generateValidAddressForUser(user);
         
         // Ejecutar funcionalidades
-        UUID userID = user.getUserProfileID();
+        UUID userID = user.getUserID();
         UserAddress assignedAddress = userService.assignAddressToUser(userID, generatedAddress);
         
         // Comprobar resultados
@@ -203,7 +203,7 @@ public class UserServiceTest {
         User user = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(user);                           // Registrar usuario antes para obtener su ID
         UserAddress generatedAddress = generateValidAddressForUser(user);
-        UUID userID = user.getUserProfileID();
+        UUID userID = user.getUserID();
         UserAddress updatingAddress = userService.assignAddressToUser(userID, generatedAddress);
         
         // Ejecutar funcionalidades
@@ -237,7 +237,7 @@ public class UserServiceTest {
         
         // Ejecutar funcionalidades
         userService.signUp(user);
-        UUID userId = user.getUserProfileID();
+        UUID userId = user.getUserID();
         userService.deleteUser(userId);
         
         // Comprobar resultados

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.unp0wnable</groupId>
 	<artifactId>groupeo</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
 	<name>Groupeo-backend</name>
 	<description>Groupeo app backend built in Spring </description>
 	<url>https://github.com/unp0wnable/groupeo-backend</url>

@@ -1,10 +1,12 @@
 package me.unp0wnable.groupeo.model.entities;
 
 import lombok.*;
+import me.unp0wnable.groupeo.model.constants.FriendshipStatusCodes;
+import me.unp0wnable.groupeo.model.entities.identities.FriendshipStatusPK;
 
 import javax.persistence.*;
 import java.util.Calendar;
-import java.util.UUID;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -14,34 +16,23 @@ import java.util.UUID;
 @Table(name = "friendshipstatus")
 public class FriendshipStatus {
     @EmbeddedId
-    private FriendshipStatusPK friendshipStatusPK;
+    private FriendshipStatusPK id;
     
-    @OneToOne(fetch = FetchType.EAGER,
-            cascade = CascadeType.PERSIST,
-            optional = false,
-            orphanRemoval = true)
-    @JoinColumn(name = "specifierid", nullable = false)
+    private FriendshipStatusCodes status;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "lastupdated")
+    private Date lastUpdated = Calendar.getInstance().getTime();
+    
+    @ManyToOne(cascade = CascadeType.PERSIST, optional = false)
+    @JoinColumns( {
+        @JoinColumn(name = "requesterid", referencedColumnName = "requesterid", nullable = false),
+        @JoinColumn(name = "targetid", referencedColumnName = "targetid", nullable = false)
+    })
+    private Friendship friendship;
+    
+    @ManyToOne(optional = false, targetEntity = User.class)
+    @JoinColumn(name = "specifierID", nullable = false)
     private User specifier;
     
-    @OneToOne(fetch = FetchType.EAGER,
-            orphanRemoval = true)
-    @JoinColumn(name = "statusid")
-    private FriendshipStatusCode statusCode;
-    
-    
-    public FriendshipStatus(UUID requesterID, UUID targetID, User specifier, FriendshipStatusCode statusCode) {
-        this.specifier = specifier;
-        this.statusCode = statusCode;
-        this.friendshipStatusPK = new FriendshipStatusPK(requesterID, targetID, Calendar.getInstance().getTime());
-    }
-    
-    @Override
-    public int hashCode() {
-        return this.friendshipStatusPK.hashCode();
-    }
-    
-    @Override
-    public boolean equals(Object obj) {
-        return this.friendshipStatusPK.equals(obj);
-    }
 }

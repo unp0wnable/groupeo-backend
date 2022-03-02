@@ -1,10 +1,10 @@
 package me.unp0wnable.groupeo.model.entities;
 
 import lombok.*;
+import me.unp0wnable.groupeo.model.entities.identities.FriendshipPK;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -14,23 +14,27 @@ import java.util.UUID;
 @Table(name = "friendship")
 public class Friendship {
     @EmbeddedId
-    private FriendshipPK friendshipPK;
+    private FriendshipPK id;
     
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date creationDate;
+    @OneToOne(cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @JoinColumn(name = "groupID")
+    private Group group;
     
-    
-    public Friendship(UUID requesterID, UUID targetID) {
-        this.friendshipPK = new FriendshipPK(requesterID, targetID);
-    }
+    @OneToMany(mappedBy = "friendship", orphanRemoval = true, cascade = CascadeType.PERSIST)
+    @OrderBy("lastUpdated ASC")
+    private List<FriendshipStatus> friendshipStatus = new ArrayList<>();
     
     @Override
     public int hashCode( ) {
-        return this.friendshipPK.hashCode();
+        return Objects.hash(id);
     }
     
     @Override
-    public boolean equals(Object obj) {
-        return this.friendshipPK.equals(obj);
+    public boolean equals(Object o) {
+        if ( this == o ) return true;
+        if ( o == null || getClass() != o.getClass() ) return false;
+        Friendship that = ( Friendship ) o;
+        
+        return id.equals(that.getId());
     }
 }

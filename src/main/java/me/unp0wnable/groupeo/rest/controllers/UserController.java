@@ -70,7 +70,7 @@ public class UserController {
         // Genera los datos que contendrá la respuesta
         URI resourceLocation = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{userId}")
-                .buildAndExpand(signedUpUser.getUserProfileID())
+                .buildAndExpand(signedUpUser.getUserID())
                 .toUri();
         String token = generateServiceTokenForUser(signedUpUser);
         AuthenticatedUserDto authUserDto = UserConversor.toAuthenticatedUserDTO(signedUpUser, token);
@@ -181,7 +181,7 @@ public class UserController {
     /* ************************************************* AUX METHODS ************************************************* */
     /** Genera un JWT para el usuario actual */
     private String generateServiceTokenForUser(User user) {
-        JwtData jwtData = new JwtData(user.getUserProfileID(), user.getNickName(), user.getRole().toString());
+        JwtData jwtData = new JwtData(user.getUserID(), user.getNickName(), user.getRole().toString());
         
         return jwtGenerator.generateJWT(jwtData);
     }

@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "usergroup")
+@Table(name = "grouptable")
 public class Group {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -23,4 +23,9 @@ public class Group {
     
     @Column(name = "name", nullable = false)
     private String name;
+    
+    @OneToOne(optional = false, orphanRemoval = true)
+    @JoinColumn(name = "creatorID", nullable = false)
+    private User creator;
+    
 }
