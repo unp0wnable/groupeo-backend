@@ -1,10 +1,12 @@
 package me.unp0wnable.groupeo.model.entities;
 
 import lombok.*;
+import me.unp0wnable.groupeo.model.constants.FriendshipStatusCodes;
 import me.unp0wnable.groupeo.model.entities.identities.FriendshipPK;
 
 import javax.persistence.*;
-import java.util.*;
+import java.util.Date;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -20,9 +22,18 @@ public class Friendship {
     @JoinColumn(name = "groupID")
     private Group group;
     
-    @OneToMany(mappedBy = "friendship", orphanRemoval = true, cascade = CascadeType.PERSIST)
-    @OrderBy("lastUpdated ASC")
-    private List<FriendshipStatus> friendshipStatus = new ArrayList<>();
+    @ManyToOne(cascade = CascadeType.PERSIST, targetEntity = User.class)
+    @JoinColumn(name = "specifierID")
+    private User specifier;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "lastupdate")
+    private Date lastUpdate;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private FriendshipStatusCodes status;
+    
     
     @Override
     public int hashCode( ) {

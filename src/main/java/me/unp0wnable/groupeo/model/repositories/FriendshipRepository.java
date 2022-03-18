@@ -4,6 +4,6 @@ import me.unp0wnable.groupeo.model.entities.Friendship;
 import me.unp0wnable.groupeo.model.entities.identities.FriendshipPK;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-public interface FriendshipRepository extends PagingAndSortingRepository<Friendship, FriendshipPK> {
+public interface FriendshipRepository extends PagingAndSortingRepository<Friendship, FriendshipPK>, CustomFriendshipRepository {
 
 }

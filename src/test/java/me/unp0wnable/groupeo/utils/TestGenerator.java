@@ -1,8 +1,8 @@
 package me.unp0wnable.groupeo.utils;
 
 import lombok.experimental.UtilityClass;
+import me.unp0wnable.groupeo.model.constants.UserRoles;
 import me.unp0wnable.groupeo.model.entities.User;
-import me.unp0wnable.groupeo.model.entities.User.UserRoles;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
 
 import java.text.ParseException;

@@ -7,6 +7,6 @@ import java.util.List;
 @Data
 public class Block<T> {
     private List<T> items;
-    private int size;
+    private int itemsCount;
     private boolean hasMoreItems;
 }

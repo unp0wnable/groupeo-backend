@@ -23,37 +23,40 @@ public interface UserService {
     
     
     /* *********************************** User relationships *********************************** */
-    FriendshipStatus addFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
-                                                                               TargetUserIsCurrentUser,
-                                                                               TargetUserIsAlreadyFriend,
-                                                                               BlockedUserException;
+    Friendship addFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
+                                                                         TargetUserIsCurrentUserException,
+                                                                         TargetUserIsAlreadyFriendException,
+                                                                         BlockedUserException;
     
-    /*void removeFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, InvalidUserException;
+    void removeFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
+                                                                      TargetUserIsCurrentUserException,
+                                                                      TargetUserIsNotFriendException,
+                                                                      BlockedUserException;
     
-    FriendshipStatus acceptFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, InvalidUserException;
+    Friendship acceptFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException;
     
-    FriendshipStatus declineFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, InvalidUserException;
+    Friendship declineFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException;
     
-    FriendshipStatus blockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, InvalidUserException;
+    Friendship blockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
     
-    void unblockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, InvalidUserException;
+    void unblockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
     
-    Block<User> getBlockedUsers(UUID userID) throws InstanceNotFoundException;
+    Block<User> getBlockedUsers(UUID userID, int page, int pageSize) throws InstanceNotFoundException;
     
-    Block<User> getUserFriends(UUID userID) throws InstanceNotFoundException;
+    Block<User> getUserFriends(UUID userID, int page, int pageSize) throws InstanceNotFoundException;
     
-    FriendshipStatus getCurrentFriendshipStatus(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, InvalidUserException;
+    Friendship getFriendshipInfoWithUser(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
     
-    Group createGroup(UUID ownerID, String name) throws InstanceAlreadyExistsException;
+    Group createGroup(UUID ownerID, String name) throws InstanceAlreadyExistsException, InstanceNotFoundException;
     
-    void deleteGroup(UUID ownerID, UUID groupId) throws InstanceNotFoundException;
+    void deleteGroup(UUID ownerID, UUID groupID) throws InstanceNotFoundException;
     
-    void updateGroupData(UUID ownerID, UUID groupId) throws InstanceNotFoundException;
+    Group updateGroupData(UUID ownerID, UUID groupId, Group groupData) throws InstanceNotFoundException;
     
-    Block<User> getFriendsFromGroup(UUID ownerID, UUID groupID) throws InstanceNotFoundException;
+    Block<User> getFriendsFromGroup(UUID groupID, int page, int pageSize) throws InstanceNotFoundException;
     
-    Friendship addFriendToGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, InvalidUserException, InstanceAlreadyExistsException;
+    Friendship addFriendToGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, InstanceAlreadyExistsException;
     
-    Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, InvalidUserException;
-    */
+    Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
+    
 }

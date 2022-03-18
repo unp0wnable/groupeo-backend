@@ -6,7 +6,8 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
-import java.util.*;
+import java.util.Date;
+import java.util.UUID;
 
 @Getter
 @Setter

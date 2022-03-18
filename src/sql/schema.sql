@@ -67,6 +67,9 @@ CREATE TABLE Friendship(
     requesterID     UUID,           -- User that requests the friendship
     targetID        UUID,           -- User that receives the friendship
     groupID         UUID,
+    specifierID     UUID,           -- User who last updated the friendship
+    lastUpdate      timestamp   DEFAULT current_timestamp,
+    status          VARCHAR,
 
     CONSTRAINT PK_Friendship PRIMARY KEY (requesterID, targetID),
     CONSTRAINT FK_Frienship_RequesterID_TO_UserProfile FOREIGN KEY (requesterID)
@@ -80,30 +83,10 @@ CREATE TABLE Friendship(
     CONSTRAINT FK_Frienship_TO_GroupTable FOREIGN KEY (groupID)
         REFERENCES GroupTable(groupID)
         ON DELETE SET NULL
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE FriendshipStatus (
-    requesterID     UUID,                                           -- User that requests the friendship
-    targetID        UUID,                                           -- User that receives the friendship
-    entryNumber     SERIAL,                                         -- Weak entity's discriminant
-    lastUpdated     TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
-    specifierID     UUID            NOT NULL,                       -- User who updates the friendship status
-    status          VARCHAR         NOT NULL,
-
-    CONSTRAINT PK_FriendshipStatus PRIMARY KEY (requesterID, targetID, entryNumber),
-    CONSTRAINT FK_FriendshipStatus_TO_Friendship FOREIGN KEY (requesterID, targetID)
-        REFERENCES Friendship(requesterID, targetID)
-        ON DELETE CASCADE
         ON UPDATE CASCADE,
-        /*
-    CONSTRAINT FK_FriendshipStatus_TO_Friendship_Target FOREIGN KEY (targetID)
-        REFERENCES Friendship(targetID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE, */
-    CONSTRAINT FK_FriendshipStatus_TO_UserProfile_Specifier FOREIGN KEY (specifierID)
+    CONSTRAINT FK_Friendship_SpecifierID_TO_UserProfile FOREIGN KEY (specifierID)
         REFERENCES UserProfile(userProfileID)
-        ON DELETE CASCADE
+        ON DELETE SET NULL
         ON UPDATE CASCADE
 );
 
