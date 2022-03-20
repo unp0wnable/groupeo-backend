@@ -17,10 +17,10 @@ import java.util.UUID;
 @Table(name = "UserProfile")
 public class User {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(generator = "postgresql-uuid-generator")
+    @GenericGenerator(name = "postgresql-uuid-generator", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "org.hibernate.type.PostgresUUIDType")
-    @Column(name = "userProfileID", nullable = false)
+    @Column(name = "userID", nullable = false)
     private UUID userID;
     
     @Column(name = "firstName", length = 30, nullable = false)

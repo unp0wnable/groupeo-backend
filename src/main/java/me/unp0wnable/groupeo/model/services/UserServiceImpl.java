@@ -450,9 +450,9 @@ UserServiceImpl implements UserService {
         UUID targetID = targetUser.getUserID();
         
         // Como la clave primaria es compuesta, se instancia un objeto con los ID y se le pasa al repositorio
-        FriendshipPK id = new FriendshipPK(requestorID, targetID);
+        //FriendshipPK id = new FriendshipPK(requestorID, targetID);
         
-        Optional<Friendship> optionalFriendship = friendshipRepository.findById(id);
+        Optional<Friendship> optionalFriendship = friendshipRepository.findById(new FriendshipPK(requestorID, targetID));
         if ( optionalFriendship.isEmpty() ) return null;
         
         return optionalFriendship.get();

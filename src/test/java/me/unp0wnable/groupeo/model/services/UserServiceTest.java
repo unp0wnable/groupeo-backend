@@ -1,7 +1,6 @@
 package me.unp0wnable.groupeo.model.services;
 
-import me.unp0wnable.groupeo.model.entities.User;
-import me.unp0wnable.groupeo.model.entities.UserAddress;
+import me.unp0wnable.groupeo.model.entities.*;
 import me.unp0wnable.groupeo.model.exceptions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +22,7 @@ public class UserServiceTest {
     private UserService userService;
     
     /* ****************************** TEST CASES ****************************** */
+    /* *********************************** User profile *********************************** */
     @Test
     public void testSignUpAndLoginUsingID()
             throws InstanceAlreadyExistsException, InstanceNotFoundException {
@@ -218,7 +218,6 @@ public class UserServiceTest {
     }
     
     @Test
-    
     public void testAssignAddressOfNonExistingUser() {
         // Generar datos
         User user = generateValidUser(DEFAULT_NICKNAME);
@@ -230,7 +229,7 @@ public class UserServiceTest {
         );
     }
     
-     @Test
+    @Test
     public void testDeleteUser() throws InstanceAlreadyExistsException, InstanceNotFoundException {
         // Generar datos
         User user = generateValidUser(DEFAULT_NICKNAME);
@@ -247,10 +246,32 @@ public class UserServiceTest {
     }
     
     @Test
-    
     public void testDeleteNonExistingUser() {
         assertThrows(InstanceNotFoundException.class,
             () -> userService.deleteUser(NON_EXISTENT_USER_ID)
         );
     }
+    
+    
+    /* *********************************** User relationships *********************************** */
+    @Test
+    public void testAddFriend()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   TargetUserIsAlreadyFriendException, BlockedUserException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Requestor", this.userService);
+        User targetUser = registerValidUser("Target", this.userService);
+    
+        // Ejecutar funcionalidades
+        UUID requestorID = requestorUser.getUserID();
+        UUID targetID = targetUser.getUserID();
+        Friendship friendship = userService.addFriend(requestorID, targetID);
+    
+        // Comprobar resultados
+        assertAll(
+                () -> assertNull(friendship.getGroup()),
+                () -> assertEquals(friendship.getSpecifier(), requestorUser)
+        );
+    }
+    
 }

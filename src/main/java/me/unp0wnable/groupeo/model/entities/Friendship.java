@@ -18,16 +18,16 @@ public class Friendship {
     @EmbeddedId
     private FriendshipPK id;
     
-    @OneToOne(cascade = CascadeType.PERSIST, orphanRemoval = true)
-    @JoinColumn(name = "groupID")
+    @OneToOne(orphanRemoval = true)
+    @JoinColumn(name = "groupid")
     private Group group;
     
-    @ManyToOne(cascade = CascadeType.PERSIST, targetEntity = User.class)
-    @JoinColumn(name = "specifierID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "specifierid", referencedColumnName = "userid", nullable = false)
     private User specifier;
     
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "lastupdate")
+    @Column(name = "lastupdate", nullable = false)
     private Date lastUpdate;
     
     @Enumerated(EnumType.STRING)

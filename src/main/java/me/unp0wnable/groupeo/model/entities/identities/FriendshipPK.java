@@ -1,27 +1,33 @@
 package me.unp0wnable.groupeo.model.entities.identities;
 
 import lombok.*;
-import me.unp0wnable.groupeo.model.entities.User;
+import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import javax.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
 @Embeddable
 public class FriendshipPK implements Serializable {
     private static final long serialVersionUID = -774242906897515405L;
     
-    @ManyToOne(optional = false, targetEntity = User.class)
-    @JoinColumn(name = "requesterid", nullable = false)
+    //@ManyToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    //@JoinColumn(name = "requesterid", referencedColumnName = "requesterid", nullable = false)
+    @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID requesterID;
     
-    @ManyToOne(optional = false, targetEntity = User.class)
-    @JoinColumn(name = "targetid")
+    //@ManyToOne(optional = false, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    //@JoinColumn(name = "targetid", referencedColumnName = "targetid", nullable = false)
+    @Type(type = "org.hibernate.type.PostgresUUIDType")
     private UUID targetID;
     
+    
+    public FriendshipPK(UUID requesterID, UUID targetID) {
+        this.requesterID = requesterID;
+        this.targetID = targetID;
+    }
 }

@@ -10,7 +10,7 @@ spring:
     username: nyjlmwrgaqfgvo
     password: 98b3b230e208d2675242fa595b2ea38aa754b76fa2f6dba3214485ea445afa48
     tomcat:
-      max-active: 1
-      max-idle: 1
+      max-active: 2
+      max-idle: 2
       remove-abandoned: true
       remove-abandoned-timeout: 5

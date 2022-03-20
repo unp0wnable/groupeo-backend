@@ -16,7 +16,7 @@ DROP TABLE IF EXISTS UserProfile;
 /* ******************** CREATE TABLES ******************** */
 /* *************** ACCOUNTS *************** */
 CREATE TABLE UserProfile (
-    userProfileID UUID          DEFAULT uuid_generate_v4(),
+    userID        UUID          DEFAULT uuid_generate_v4(),
     firstName     VARCHAR(30)   NOT NULL,
     surname1      VARCHAR(50),
     surname2      VARCHAR(50),
@@ -31,7 +31,7 @@ CREATE TABLE UserProfile (
     role          VARCHAR       NOT NULL,
     userAddressID UUID,
 
-    CONSTRAINT PK_UserProfile PRIMARY KEY (userProfileID),
+    CONSTRAINT PK_UserProfile PRIMARY KEY (userID),
     CONSTRAINT UNIQUE_UserProfile_email UNIQUE (email),
     CONSTRAINT UNIQUE_UserProfile_nickName UNIQUE (nickName)
 );
@@ -46,7 +46,7 @@ CREATE TABLE UserAddress (
 
     CONSTRAINT PK_UserAddress PRIMARY KEY (userAddressID),
     CONSTRAINT FK_UserAddress_TO_UserProfile FOREIGN KEY (userProfileID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -58,26 +58,26 @@ CREATE TABLE GroupTable (
 
     CONSTRAINT PK_GroupTable PRIMARY KEY (groupID),
     CONSTRAINT FK_GroupTable_TO_UserProfile FOREIGN KEY (creatorID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 CREATE TABLE Friendship(
-    requesterID     UUID,           -- User that requests the friendship
-    targetID        UUID,           -- User that receives the friendship
+    requesterID     UUID,                                   -- User that requests the friendship
+    targetID        UUID,                                   -- User that receives the friendship
     groupID         UUID,
-    specifierID     UUID,           -- User who last updated the friendship
+    specifierID     UUID        NOT NULL,                   -- User who last updated the friendship
     lastUpdate      timestamp   DEFAULT current_timestamp,
     status          VARCHAR,
 
     CONSTRAINT PK_Friendship PRIMARY KEY (requesterID, targetID),
     CONSTRAINT FK_Frienship_RequesterID_TO_UserProfile FOREIGN KEY (requesterID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
         CONSTRAINT FK_Frienship_TargetID_TO_UserProfile FOREIGN KEY (targetID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
     CONSTRAINT FK_Frienship_TO_GroupTable FOREIGN KEY (groupID)
@@ -85,7 +85,7 @@ CREATE TABLE Friendship(
         ON DELETE SET NULL
         ON UPDATE CASCADE,
     CONSTRAINT FK_Friendship_SpecifierID_TO_UserProfile FOREIGN KEY (specifierID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE SET NULL
         ON UPDATE CASCADE
 );
@@ -131,7 +131,7 @@ CREATE TABLE Meeting (
 
     CONSTRAINT PK_Meeting PRIMARY KEY (meetingID),
     CONSTRAINT FK_Meeting_TO_UserProfile FOREIGN KEY (creatorID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
     CONSTRAINT FK_Meeting_TO_Place FOREIGN KEY (placeID)
@@ -148,11 +148,11 @@ CREATE TABLE Assistance (
 
     CONSTRAINT PK_Assistance PRIMARY KEY (invitingUserID, invitedUserID, meetingID),
     CONSTRAINT FK_Assistance_TO_UserProfile_Inviting FOREIGN KEY (invitingUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT FK_Assistance_TO_UserProfile_Invited FOREIGN KEY (invitingUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT FK_Assistance_TO_Meeting FOREIGN KEY (meetingID)
@@ -181,11 +181,11 @@ CREATE TABLE AssistanceStatus (
         ON DELETE SET NULL
         ON UPDATE CASCADE,
     CONSTRAINT FK_Friendship_TO_UserProfile_Inviting FOREIGN KEY (invitingUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT FK_Friendship_TO_UserProfile_Invited FOREIGN KEY (invitedUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );

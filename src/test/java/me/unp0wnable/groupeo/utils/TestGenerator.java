@@ -4,6 +4,8 @@ import lombok.experimental.UtilityClass;
 import me.unp0wnable.groupeo.model.constants.UserRoles;
 import me.unp0wnable.groupeo.model.entities.User;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
+import me.unp0wnable.groupeo.model.exceptions.InstanceAlreadyExistsException;
+import me.unp0wnable.groupeo.model.services.UserService;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -37,7 +39,7 @@ public class TestGenerator {
         user.setFirstName("FirstName");
         user.setSurname1("Surname1");
         user.setSurname2("Surname2");
-        user.setEmail(nickName + "@groupeo.es");
+        user.setEmail(nickName.toLowerCase() + "@groupeo.es");
         user.setBirthDate(parseDate("2022-02-01"));
         user.setJoinDate(Calendar.getInstance().getTime());
         user.setDescription("A brief description of myself");
@@ -66,5 +68,11 @@ public class TestGenerator {
         } catch ( ParseException e) {
             return null;
         }
+    }
+    
+    public static User registerValidUser(String nickName, UserService service) throws InstanceAlreadyExistsException {
+        User user = generateValidUser(nickName);
+        
+        return service.signUp(user);
     }
 }
