@@ -120,7 +120,7 @@ public class UserServiceTest {
     }
     
     @Test
-    public void testChangePasswordToNonExistingUser() throws InstanceAlreadyExistsException {
+    public void testChangePasswordWithIncorrectPassword() throws InstanceAlreadyExistsException {
         // Generar datos
         User user = generateValidUser(DEFAULT_NICKNAME);
         String oldPassword = user.getPassword();
@@ -136,7 +136,7 @@ public class UserServiceTest {
     }
     
     @Test
-    public void testChangePasswordWithIncorrectPassword() {
+    public void testChangePasswordToNonExistingUser() {
         // Generar datos
         String oldPassword = "old";
         String newPassword = "new";
@@ -274,4 +274,85 @@ public class UserServiceTest {
         );
     }
     
+    @Test
+    public void testAddFriendToNonExistentUser()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   TargetUserIsAlreadyFriendException, BlockedUserException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Requestor", this.userService);
+        
+        
+        // Ejecutar funcionalidades
+        UUID requestorID = requestorUser.getUserID();
+        
+        // Comprobar resultados
+        assertThrows(InstanceNotFoundException.class,
+            () -> userService.addFriend(requestorID, NON_EXISTENT_USER_ID)
+        );
+    }
+    
+    @Test
+    public void testAddFriendToCurrentUser()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   TargetUserIsAlreadyFriendException, BlockedUserException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Requestor", this.userService);
+        
+        
+        // Ejecutar funcionalidades
+        UUID requestorID = requestorUser.getUserID();
+        
+        // Comprobar resultados
+        assertThrows(TargetUserIsCurrentUserException.class,
+                     () -> userService.addFriend(requestorID, requestorID)
+        );
+    }
+    
+    @Test
+    public void testAddFriendToAlreadyFriend()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   TargetUserIsAlreadyFriendException, BlockedUserException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Requestor", this.userService);
+        User targetUser = registerValidUser("Target", this.userService);
+        
+        
+        // Ejecutar funcionalidades
+        UUID requestorID = requestorUser.getUserID();
+        UUID targetID = targetUser.getUserID();
+        Friendship friendship = userService.addFriend(requestorID, targetID);
+        
+        // Comprobar resultados
+        assertAll(
+            () -> assertThrows(
+                TargetUserIsCurrentUserException.class,
+                () -> userService.addFriend(requestorID, requestorID)
+            ),
+            () -> assertNotNull(friendship)
+        );
+    }
+    
+    @Test
+    public void testAddFriendToBlockedUser()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   TargetUserIsAlreadyFriendException, BlockedUserException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Requestor", this.userService);
+        User targetUser = registerValidUser("Target", this.userService);
+        
+        
+        // Ejecutar funcionalidades
+        UUID requestorID = requestorUser.getUserID();
+        UUID targetID = targetUser.getUserID();
+        Friendship friendship = userService.blockFriend(requestorID, targetID);
+        
+        // Comprobar resultados
+        assertAll(
+                () -> assertThrows(
+                        BlockedUserException.class,
+                        () -> userService.addFriend(requestorID, requestorID)
+                ),
+                () -> assertNotNull(friendship)
+        );
+    }
 }
