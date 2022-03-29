@@ -68,7 +68,7 @@ CREATE TABLE Friendship(
     targetID        UUID,                                   -- User that receives the friendship
     groupID         UUID,
     specifierID     UUID        NOT NULL,                   -- User who last updated the friendship
-    lastUpdate      timestamp   DEFAULT current_timestamp,
+    lastUpdate      timestamp   NOT NULL DEFAULT current_timestamp,
     status          VARCHAR,
 
     CONSTRAINT PK_Friendship PRIMARY KEY (requesterID, targetID),
@@ -87,7 +87,9 @@ CREATE TABLE Friendship(
     CONSTRAINT FK_Friendship_SpecifierID_TO_UserProfile FOREIGN KEY (specifierID)
         REFERENCES UserProfile(userID)
         ON DELETE SET NULL
-        ON UPDATE CASCADE
+        ON UPDATE CASCADE,
+    -- Restricción para identificar unívocamente las amistades entre usuarios --
+    CONSTRAINT CHK_FriendshipPKIsUnequivocal CHECK (requesterID < targetID)
 );
 
 

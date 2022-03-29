@@ -135,28 +135,41 @@ UserServiceImpl implements UserService {
     /* *********************************** User relationships *********************************** */
     @Override
     public Friendship addFriend(UUID requestorUserID, UUID targetUserID)
-            throws InstanceNotFoundException, TargetUserIsCurrentUserException, TargetUserIsAlreadyFriendException, BlockedUserException {
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, TargetUserIsAlreadyFriendException,
+                   BlockedUserException, InstanceAlreadyExistsException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
         
         // Obtener a los usuarios
         User requestorUser = fetchUser(requestorUserID);
         User targetUser = fetchUser(targetUserID);
-        Friendship requestorFriendshipWithTarget = getFriendshipBetweenUsers(requestorUser, targetUser);
-        Friendship targetFriendshipWithRequestor = getFriendshipBetweenUsers(targetUser, requestorUser);
+        Friendship usersFriendship = getFriendshipBetweenUsers(requestorUser, targetUser);
         
-        if ( requestorFriendshipWithTarget != null) {                           // Comprobar que los usuarios no estén bloqueados
-            // Comprobar si el objetivo tiene bloqueado al usuario actual
-            if ( requestorFriendshipWithTarget.getStatus().equals(FriendshipStatusCodes.BLOQUED))
-                throw new BlockedUserException(targetUserID);
+        // Si ya existe algún tipo de relación entre los usuarios
+        if ( usersFriendship != null) {
+            switch ( usersFriendship.getStatus() ) {
+                // Comprobar que los usuarios no estén bloqueados
+                case BLOQUED:
+                    throw new BlockedUserException(targetUserID);
+                // Comprobar que no exista alguna petición de amistad sin responder
+                case REQUESTED:
+                    throw new InstanceAlreadyExistsException(Friendship.class.getName(), targetUserID);
+                // Comprobar que no se pueda añadir como amigo a un usuario que ya es amigo actualmente
+                case ACCEPTED:
+                    throw new TargetUserIsAlreadyFriendException(targetUserID);
+                // Si usuario ha rechazado la peticion, se puede volver a solicitar
+                case DECLINED:
+                    usersFriendship = updateFriendhipStatus(usersFriendship, requestorUser, FriendshipStatusCodes.REQUESTED);
+            }
+        }
+    
+        // Si no hay amistad entre los usuarios, se crea la petición de amistad
+        if ( usersFriendship == null) {
+            usersFriendship = createNewFriendship(requestorUser, targetUser);
+            usersFriendship.setStatus(FriendshipStatusCodes.REQUESTED);
         }
         
-        if ( requestorFriendshipWithTarget == null) {                       // Si no hay amistad entre los usuarios, se crea la petición de amistad
-            requestorFriendshipWithTarget = createNewFriendship(requestorUser, targetUser);
-            requestorFriendshipWithTarget.setStatus(FriendshipStatusCodes.REQUESTED);
-        }
-        
-        return requestorFriendshipWithTarget;
+        return usersFriendship;
     }
     
     @Override
@@ -237,7 +250,7 @@ UserServiceImpl implements UserService {
         Friendship friendship = getFriendshipBetweenUsers(requestorUser, targetUser);
         
         // Si no hay ningun tipo de relación previa, se crea una nueva
-        if (friendship != null) {
+        if (friendship == null) {
             friendship = new Friendship();
             FriendshipPK friendshipPK = new FriendshipPK(requestorUserID, targetUserID);
             friendship.setId(friendshipPK);
@@ -411,6 +424,7 @@ UserServiceImpl implements UserService {
     
     
     /* ****************************** AUX FUNCTIONS ****************************** */
+    /** Busca un usuario en la base de datos. Lanza InstanceNotFound si no existe */
     private User fetchUser(UUID userID) throws InstanceNotFoundException {
         // Comprobar si existe el usuario con el ID recibido
         Optional<User> optionalUser = userRepository.findById(userID);
@@ -420,6 +434,7 @@ UserServiceImpl implements UserService {
         return optionalUser.get();
     }
     
+    /** Busca un grupo en la base de datos. Lanza InstanceNotFound si no existe */
     private Group fetchGroup(UUID groupID) throws InstanceNotFoundException {
         // Comprobar si existe el grupo con el ID recibido
         Optional<Group> optionalGroup = groupRepository.findById(groupID);
@@ -443,6 +458,7 @@ UserServiceImpl implements UserService {
         return Calendar.getInstance().getTime();
     }
     
+    
     /** Obtiene una instancia de la amistad entre dos usuarios */
     private Friendship getFriendshipBetweenUsers(User requestorUser, User targetUser) {
         // Extraer los ID de los usuarios antes de realizar las operaciones
@@ -450,14 +466,14 @@ UserServiceImpl implements UserService {
         UUID targetID = targetUser.getUserID();
         
         // Como la clave primaria es compuesta, se instancia un objeto con los ID y se le pasa al repositorio
-        //FriendshipPK id = new FriendshipPK(requestorID, targetID);
-        
-        Optional<Friendship> optionalFriendship = friendshipRepository.findById(new FriendshipPK(requestorID, targetID));
+        FriendshipPK friendshipID = new FriendshipPK(requestorID, targetID);
+        Optional<Friendship> optionalFriendship = friendshipRepository.findById(friendshipID);
         if ( optionalFriendship.isEmpty() ) return null;
         
         return optionalFriendship.get();
     }
     
+    /** Crea una nueva relación entre dos usuarios */
     private Friendship createNewFriendship(User requestorUser, User targetUser) {
         Friendship friendship = new Friendship();
         FriendshipPK friendshipPK = new FriendshipPK(requestorUser.getUserID(), targetUser.getUserID());

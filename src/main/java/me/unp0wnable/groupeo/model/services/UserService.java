@@ -26,7 +26,8 @@ public interface UserService {
     Friendship addFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
                                                                          TargetUserIsCurrentUserException,
                                                                          TargetUserIsAlreadyFriendException,
-                                                                         BlockedUserException;
+                                                                         BlockedUserException,
+                                                                         InstanceAlreadyExistsException;
     
     void removeFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
                                                                       TargetUserIsCurrentUserException,

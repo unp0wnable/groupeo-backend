@@ -27,7 +27,15 @@ public class FriendshipPK implements Serializable {
     
     
     public FriendshipPK(UUID requesterID, UUID targetID) {
-        this.requesterID = requesterID;
-        this.targetID = targetID;
+        // Asigna a RequesterID el UUID más bajo.
+        // De esta forma siempre se podrá identificar unequívocamente una amistad entre dos usuarios
+        if (requesterID.compareTo(targetID) < 0) {
+            this.requesterID = requesterID;
+            this.targetID = targetID;
+        }
+        if (requesterID.compareTo(targetID) > 0) {
+            this.requesterID = targetID;
+            this.targetID = requesterID;
+        }
     }
 }
