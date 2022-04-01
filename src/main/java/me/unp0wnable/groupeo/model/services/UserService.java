@@ -13,7 +13,7 @@ public interface UserService {
     
     User loginFromServiceToken(UUID userID) throws InstanceNotFoundException;
     
-    void changePassword(UUID id, String oldPassword, String newPassword) throws InstanceNotFoundException, IncorrectPasswordExcepion;
+    void changePassword(UUID id, String oldPassword, String newPassword) throws InstanceNotFoundException,IncorrectPasswordExcepion;
     
     User updateUserProfile(UUID userID, User profile) throws InstanceNotFoundException;
     
@@ -34,9 +34,14 @@ public interface UserService {
                                                                       TargetUserIsNotFriendException,
                                                                       BlockedUserException;
     
-    Friendship acceptFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException;
+    Friendship acceptFriendshipRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
+                                                                                       TargetUserIsCurrentUserException,
+                                                                                       NonExistentFriendshipRequestException,
+                                                                                       TargetUserIsAlreadyFriendException;
     
-    Friendship declineFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException;
+    Friendship declineFriendshipRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
+                                                                                        TargetUserIsCurrentUserException,
+                                                                                        NonExistentFriendshipRequestException;
     
     Friendship blockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
     
@@ -46,7 +51,8 @@ public interface UserService {
     
     Block<User> getUserFriends(UUID userID, int page, int pageSize) throws InstanceNotFoundException;
     
-    Friendship getFriendshipInfoWithUser(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
+    Friendship getFriendshipInfoWithUser(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
+                                                                                         TargetUserIsCurrentUserException;
     
     Group createGroup(UUID ownerID, String name) throws InstanceAlreadyExistsException, InstanceNotFoundException;
     
@@ -56,8 +62,11 @@ public interface UserService {
     
     Block<User> getFriendsFromGroup(UUID groupID, int page, int pageSize) throws InstanceNotFoundException;
     
-    Friendship addFriendToGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, InstanceAlreadyExistsException;
+    Friendship addFriendToGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException,
+                                                                                              TargetUserIsCurrentUserException,
+                                                                                              InstanceAlreadyExistsException;
     
-    Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
+    Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException,
+                                                                                                   TargetUserIsCurrentUserException;
     
 }

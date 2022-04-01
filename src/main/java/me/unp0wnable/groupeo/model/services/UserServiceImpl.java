@@ -196,7 +196,9 @@ UserServiceImpl implements UserService {
     }
     
     @Override
-    public Friendship acceptFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException {
+    public Friendship acceptFriendshipRequest(UUID requestorUserID, UUID targetUserID)
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException,
+                   TargetUserIsAlreadyFriendException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
     
@@ -207,17 +209,20 @@ UserServiceImpl implements UserService {
         // Comprobar si hay una petición de amistad pendiente
         Friendship friendship = getFriendshipBetweenUsers(requestorUser, targetUser);
         
-        // Si no hay petición de amistad, ńo se puede aceptar
+        // Si no hay petición de amistad, no se puede aceptar
         if (friendship == null) throw new NonExistentFriendshipRequestException(requestorUserID, targetUserID);
         
+        // Solo se acepta la petición si no está aceptada previamente
+        if (friendship.getStatus().equals(FriendshipStatusCodes.ACCEPTED))
+            throw new TargetUserIsAlreadyFriendException(targetUserID);
         // Cambiar el estado de la amistad a ACEPTADA por parte del usuario actual
-        friendship = updateFriendhipStatus(friendship, targetUser, FriendshipStatusCodes.ACCEPTED);
+        Friendship updatedFriendship = updateFriendhipStatus(friendship, targetUser, FriendshipStatusCodes.ACCEPTED);
         
-        return friendshipRepository.save(friendship);
+        return friendshipRepository.save(updatedFriendship);
     }
     
     @Override
-    public Friendship declineFriendRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException {
+    public Friendship declineFriendshipRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
     
@@ -232,9 +237,9 @@ UserServiceImpl implements UserService {
         if (friendship == null) throw new NonExistentFriendshipRequestException(requestorUserID, targetUserID);
     
         // Cambiar el estado de la amistad a ACEPTADA por parte del usuario actual
-        friendship = updateFriendhipStatus(friendship, targetUser, FriendshipStatusCodes.DECLINED);
+        Friendship updatedFriendship = updateFriendhipStatus(friendship, requestorUser, FriendshipStatusCodes.DECLINED);
     
-        return friendshipRepository.save(friendship);
+        return friendshipRepository.save(updatedFriendship);
     }
     
     @Override
@@ -257,9 +262,9 @@ UserServiceImpl implements UserService {
         }
         
         // Asigna el estado de la relación a BLOQUEADO
-        friendship = updateFriendhipStatus(friendship, targetUser, FriendshipStatusCodes.BLOQUED);
+        Friendship updatedFriendship = updateFriendhipStatus(friendship, targetUser, FriendshipStatusCodes.BLOQUED);
         
-        return friendshipRepository.save(friendship);
+        return friendshipRepository.save(updatedFriendship);
     }
     
     @Override

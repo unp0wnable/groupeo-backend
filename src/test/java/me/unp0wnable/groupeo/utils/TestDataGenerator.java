@@ -13,7 +13,7 @@ import java.util.*;
 
 /** Clase con métodos auxiliares para la ejecución de los test */
 @UtilityClass
-public class TestGenerator {
+public class TestDataGenerator {
     // INFO: https://stackoverflow.com/questions/64580412/generate-valid-deterministic-uuids-for-tests
     public static final UUID NON_EXISTENT_USER_ID = UUID.fromString("00000000-0000-4000-8000-000000000000");
     public static final UUID NON_EXISTENT_ADDRESS_ID = UUID.fromString("00000001-0000-4000-8000-000000000000");

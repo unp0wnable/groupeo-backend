@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static me.unp0wnable.groupeo.rest.security.JwtFilter.AUTH_TOKEN_PREFIX;
-import static me.unp0wnable.groupeo.utils.TestGenerator.*;
+import static me.unp0wnable.groupeo.utils.TestDataGenerator.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

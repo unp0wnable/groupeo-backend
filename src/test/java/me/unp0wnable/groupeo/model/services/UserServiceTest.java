@@ -1,5 +1,6 @@
 package me.unp0wnable.groupeo.model.services;
 
+import me.unp0wnable.groupeo.model.constants.FriendshipStatusCodes;
 import me.unp0wnable.groupeo.model.entities.*;
 import me.unp0wnable.groupeo.model.exceptions.*;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-import static me.unp0wnable.groupeo.utils.TestGenerator.*;
+import static me.unp0wnable.groupeo.utils.TestDataGenerator.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -200,10 +201,10 @@ public class UserServiceTest {
         // Generar datos
         User user = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(user);                           // Registrar usuario antes para obtener su ID
+        UUID userID = user.getUserID();
         UserAddress generatedAddress = generateValidAddressForUser(user);
         
         // Ejecutar funcionalidades
-        UUID userID = user.getUserID();
         UserAddress assignedAddress = userService.assignAddressToUser(userID, generatedAddress);
         
         // Comprobar resultados
@@ -219,8 +220,8 @@ public class UserServiceTest {
         // Generar datos
         User user = generateValidUser(DEFAULT_NICKNAME);
         userService.signUp(user);                           // Registrar usuario antes para obtener su ID
-        UserAddress generatedAddress = generateValidAddressForUser(user);
         UUID userID = user.getUserID();
+        UserAddress generatedAddress = generateValidAddressForUser(user);
         UserAddress updatingAddress = userService.assignAddressToUser(userID, generatedAddress);
         
         // Ejecutar funcionalidades
@@ -277,11 +278,11 @@ public class UserServiceTest {
                    TargetUserIsAlreadyFriendException, BlockedUserException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
     
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.addFriend(requestorID, targetID);
     
         // Comprobar resultados
@@ -295,7 +296,6 @@ public class UserServiceTest {
     public void testAddFriendToNonExistentUser() throws InstanceAlreadyExistsException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
-        
         
         // Ejecutar funcionalidades
         UUID requestorID = requestorUser.getUserID();
@@ -312,11 +312,11 @@ public class UserServiceTest {
                    TargetUserIsAlreadyFriendException, BlockedUserException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.addFriend(requestorID, targetID);
         
         // Comprobar resultados
@@ -331,11 +331,11 @@ public class UserServiceTest {
                    TargetUserIsAlreadyFriendException, BlockedUserException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.addFriend(requestorID, targetID);
         
         // Comprobar resultados
@@ -365,17 +365,17 @@ public class UserServiceTest {
     }
     
     @Test
-    public void testAddFriendToAlreadyFriend()
+    public void testAddFriendToAlreadyRequestedFriend()
             throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
                    TargetUserIsAlreadyFriendException, BlockedUserException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.addFriend(requestorID, targetID);
         
         // Comprobar resultados
@@ -389,22 +389,84 @@ public class UserServiceTest {
     }
     
     @Test
+    public void testAddFriendToAlreadyAcceptedFriend()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   TargetUserIsAlreadyFriendException, BlockedUserException, NonExistentFriendshipRequestException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
+        User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
+        
+        
+        // Ejecutar funcionalidades
+        Friendship beforeRequestFriendship = userService.addFriend(requestorID, targetID);
+        Friendship aceptedFriendship = userService.acceptFriendshipRequest(requestorID, targetID);
+        
+        
+        // Comprobar resultados
+        assertAll(
+                // Comprobar que se ha creado la petición de amistad
+                () -> assertNotNull(beforeRequestFriendship),
+                // Comprobar que se ha aceptado la petición de amistad
+                () -> assertNotNull(aceptedFriendship),
+                // Comprobar que no se puede enviar petición a un usuario que ya es amigo
+                () -> assertThrows(TargetUserIsAlreadyFriendException.class,
+                        () -> userService.addFriend(requestorID, targetID)
+                )
+        );
+    }
+    
+    @Test
+    public void testAddFriendToUserThatDeclinedFriendshipEarlier()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   TargetUserIsAlreadyFriendException, BlockedUserException, NonExistentFriendshipRequestException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
+        User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
+        
+        
+        // Ejecutar funcionalidades
+        Friendship firstRequestedFriendship = userService.addFriend(requestorID, targetID);
+        Friendship firstDeclinedFriendship = userService.declineFriendshipRequest(requestorID, targetID);
+        Friendship secondRequestedFriendship = userService.addFriend(requestorID, targetID);
+        
+        
+        // Comprobar resultados
+        assertAll(
+                // Comprobar que se ha creado la petición de amistad
+                () -> assertNotNull(firstRequestedFriendship),
+                () -> assertEquals(firstDeclinedFriendship.getSpecifier(), requestorUser),
+                () -> assertEquals(firstRequestedFriendship.getStatus(), FriendshipStatusCodes.REQUESTED),
+                // Comprobar que se ha rechazado la petición de amistad
+                () -> assertNotNull(firstDeclinedFriendship),
+                () -> assertEquals(firstDeclinedFriendship.getSpecifier(), targetUser),
+                () -> assertEquals(firstDeclinedFriendship.getStatus(), FriendshipStatusCodes.DECLINED),
+                // Comprobar que se envió la petición de amistad correctamente
+                () -> assertNotNull(secondRequestedFriendship),
+                () -> assertEquals(secondRequestedFriendship.getSpecifier(), requestorUser),
+                () -> assertEquals(secondRequestedFriendship.getStatus(), FriendshipStatusCodes.REQUESTED)
+        );
+    }
+    
+    @Test
     public void testAddFriendToBlockedUser()
             throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.blockFriend(requestorID, targetID);
         
         // Comprobar resultados
         assertAll(
-                () -> assertThrows(
-                        BlockedUserException.class,
+                () -> assertThrows(BlockedUserException.class,
                         () -> userService.addFriend(requestorID, targetID)
                 ),
                 () -> assertNotNull(friendship)
@@ -439,11 +501,11 @@ public class UserServiceTest {
                    TargetUserIsAlreadyFriendException, BlockedUserException, TargetUserIsNotFriendException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.addFriend(requestorID, targetID);
         userService.removeFriend(requestorID, targetID);
         
@@ -459,11 +521,11 @@ public class UserServiceTest {
                    TargetUserIsAlreadyFriendException, BlockedUserException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.addFriend(requestorID, targetID);
         
         // Comprobar resultados
@@ -509,12 +571,12 @@ public class UserServiceTest {
     public void testRemoveFriendToNonFriendUser() throws InstanceAlreadyExistsException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         
         // Comprobar resultados
         assertThrows(TargetUserIsNotFriendException.class,
@@ -527,12 +589,12 @@ public class UserServiceTest {
             throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException {
         // Crear datos de prueba
         User requestorUser = registerValidUser("Requestor", this.userService);
+        UUID requestorID = requestorUser.getUserID();
         User targetUser = registerValidUser("Target", this.userService);
+        UUID targetID = targetUser.getUserID();
         
         
         // Ejecutar funcionalidades
-        UUID requestorID = requestorUser.getUserID();
-        UUID targetID = targetUser.getUserID();
         Friendship friendship = userService.blockFriend(requestorID, targetID);
         
         // Comprobar resultados
@@ -545,7 +607,82 @@ public class UserServiceTest {
         );
     }
     
+    @Test
+    public void testAcceptFriendshipRequest()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   BlockedUserException, TargetUserIsAlreadyFriendException, NonExistentFriendshipRequestException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Alberto", this.userService);
+        UUID requestorID = requestorUser.getUserID();
+        User targetUser = registerValidUser("Vrais con V", this.userService);
+        UUID targetID = targetUser.getUserID();
+        
+        // Ejecutar funcionalidades
+        Friendship preRequestFriendship = userService.addFriend(requestorID, targetID);
+        Friendship postRequestFriendship = userService.acceptFriendshipRequest(requestorID, targetID);
+        
+        
+        // Comprobar resultados
+        assertAll(
+                // Comprobar que se creó una relación de amistad entre usuarios
+                () -> assertNotNull(preRequestFriendship),
+                // Comprobar que se sigue existiendo dicha amistad entre usuarios,
+                () -> assertNotNull(postRequestFriendship),
+                // Comprobar que la amistad se ha aceptado por el usuario que recibio la peticion (Target)
+                () -> assertEquals(postRequestFriendship.getStatus(), FriendshipStatusCodes.ACCEPTED),
+                () -> assertEquals(postRequestFriendship.getSpecifier(), targetUser),
+                () -> assertNull(postRequestFriendship.getGroup())
+        );
+    }
     
+    @Test
+    public void testAcceptFriendshipRequestTwice()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   BlockedUserException, TargetUserIsAlreadyFriendException, NonExistentFriendshipRequestException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Alberto", this.userService);
+        UUID requestorID = requestorUser.getUserID();
+        User targetUser = registerValidUser("Vrais con V", this.userService);
+        UUID targetID = targetUser.getUserID();
+        
+        // Ejecutar funcionalidades
+        Friendship preRequestFriendship = userService.addFriend(requestorID, targetID);
+        Friendship postRequestFriendship = userService.acceptFriendshipRequest(requestorID, targetID);
+        
+        
+        // Comprobar resultados
+        assertAll(
+                // Comprobar que se creó una relación de amistad entre usuarios
+                () -> assertNotNull(preRequestFriendship),
+                // Comprobar que no se puede aceptar la petición dos veces
+                () -> assertThrows(TargetUserIsAlreadyFriendException.class,
+                    () -> userService.acceptFriendshipRequest(requestorID, targetID)
+                )
+        );
+    }
+    
+    @Test
+    public void testAcceptFriendshipRequestFromNonExistentUser()
+            throws InstanceAlreadyExistsException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   BlockedUserException, TargetUserIsAlreadyFriendException, NonExistentFriendshipRequestException {
+        // Crear datos de prueba
+        User requestorUser = registerValidUser("Alberto", this.userService);
+        UUID requestorID = requestorUser.getUserID();
+        User targetUser = registerValidUser("Vrais con V", this.userService);
+        UUID targetID = targetUser.getUserID();
+        
+        // Ejecutar funcionalidades
+        Friendship preRequestFriendship = userService.addFriend(requestorID, targetID);
+        
+        // Comprobar resultados
+        assertAll(
+                // Comprobar que se creó una relación de amistad entre usuarios
+                () -> assertNotNull(preRequestFriendship),
+                () -> assertThrows(InstanceNotFoundException.class,
+                    () -> userService.acceptFriendshipRequest(NON_EXISTENT_USER_ID, targetID)
+                )
+        );
+    }
     
     
     
