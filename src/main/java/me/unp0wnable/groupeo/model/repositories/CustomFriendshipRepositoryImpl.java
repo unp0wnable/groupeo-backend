@@ -17,12 +17,12 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
         // Consultas a realizar
         // Obtener usuarios que son amigos del usuario actual
         String selectQuery =
-            "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status = :acceptedStatus ORDER BY nickName ASC";
+            "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status = :acceptedStatus ORDER BY f.id.targetID ASC";
     
         // Construir consulta y substituir parámetros
         Query query = createPaginatedQuery(selectQuery, pageable)
-                .setParameter("userID", userID.toString())
-                .setParameter("acceptedStatus", FriendshipStatusCodes.ACCEPTED.toString());
+                .setParameter("userID", userID)
+                .setParameter("acceptedStatus", FriendshipStatusCodes.ACCEPTED);
         
         // Ejecutar consulta y obtener resultados
         List<User> queryItems = query.getResultList();
@@ -34,11 +34,11 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
     public Slice<User> getFriendsByGroup(UUID groupID, Pageable pageable) {
         // Consultas a realizar
         String selectQuery =
-            "SELECT f.id.targetID FROM Friendship f GROUP BY f.group.groupID HAVING f.group.groupID = :groupID";
+            "SELECT f.group.groupID, f.id.targetID FROM Friendship f GROUP BY f.group.groupID, f.id.targetID HAVING f.group.groupID = :groupID ORDER BY f.id.targetID ASC";
         
         // Construir consulta y substituir parámetros
         Query query = createPaginatedQuery(selectQuery, pageable)
-            .setParameter("groupID", groupID.toString());
+            .setParameter("groupID", groupID);
     
         // Ejecutar consulta y obtener resultados
         List<User> queryItems = query.getResultList();
@@ -50,7 +50,7 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
     public Slice<User> getBlockedUsersByUserID(UUID userID, Pageable pageable) {
         // Consultas a realizar
         String selectQuery =
-            "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status LIKE 'BLOCKED' ORDER BY f.id.requesterID ASC";
+            "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status LIKE 'BLOCKED' ORDER BY f.id.targetID ASC";
     
         // Construir consulta y substituir parámetros
         Query query = createPaginatedQuery(selectQuery, pageable)

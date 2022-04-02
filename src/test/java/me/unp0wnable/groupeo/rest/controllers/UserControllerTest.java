@@ -331,14 +331,14 @@ public class UserControllerTest {
         ChangePasswordParamsDto paramsDto = new ChangePasswordParamsDto();
         paramsDto.setOldPassword(DEFAULT_PASSWORD);
         paramsDto.setNewPassword(DEFAULT_PASSWORD);
-        String endpointAddress = API_ENDPOINT + "/" + NON_EXISTENT_USER_ID + "/changePassword";
+        String endpointAddress = API_ENDPOINT + "/" + NON_EXISTENT_UUID + "/changePassword";
         String encodedBodyContent = this.mapper.writeValueAsString(paramsDto);
         
         // Ejecutar funcionalidades
         var performAction = mockMvc.perform(
                 put(endpointAddress)
                         // Valores anotados como @RequestAttribute
-                        .requestAttr("userID", NON_EXISTENT_USER_ID)
+                        .requestAttr("userID", NON_EXISTENT_UUID)
                         .header(HttpHeaders.AUTHORIZATION, AUTH_TOKEN_PREFIX + authUserDto.getServiceToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(encodedBodyContent)
@@ -449,14 +449,14 @@ public class UserControllerTest {
         paramsDto.setSurname2(authUserDto.getUserDTO().getSurname2() + "XXX");
         paramsDto.setEmail(authUserDto.getUserDTO().getEmail() + "XXX");
         paramsDto.setDescription(authUserDto.getUserDTO().getDescription() + "XXX");
-        String endpointAddress = API_ENDPOINT + "/" + NON_EXISTENT_USER_ID + "/update";
+        String endpointAddress = API_ENDPOINT + "/" + NON_EXISTENT_UUID + "/update";
         String encodedBodyContent = this.mapper.writeValueAsString(paramsDto);
         
         // Ejecutar funcionalidades
         var performAction = mockMvc.perform(
                 put(endpointAddress)
                         // Valores anotados como @RequestAttribute
-                        .requestAttr("userID", NON_EXISTENT_USER_ID)
+                        .requestAttr("userID", NON_EXISTENT_UUID)
                         .header(HttpHeaders.AUTHORIZATION, AUTH_TOKEN_PREFIX + authUserDto.getServiceToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(encodedBodyContent)

@@ -65,9 +65,12 @@ public interface UserService {
     
     Friendship addFriendToGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException,
                                                                                               TargetUserIsCurrentUserException,
-                                                                                              InstanceAlreadyExistsException;
+                                                                                              InstanceAlreadyExistsException,
+                                                                                              NonExistentFriendshipException,
+                                                                                              BlockedUserException;
     
-    Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException,
-                                                                                                   TargetUserIsCurrentUserException;
+    Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID)
+            throws InstanceNotFoundException,
+                   TargetUserIsCurrentUserException, UserNotInGroupException, NonExistentFriendshipException;
     
 }

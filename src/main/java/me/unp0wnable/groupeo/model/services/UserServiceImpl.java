@@ -298,7 +298,7 @@ UserServiceImpl implements UserService {
         
         // Obtener usuarios bloqueados
         Pageable pagination = PageRequest.of(page, pageSize);
-        Slice<User> usersSlice = friendshipRepository.getBlockedUsersByUserID(userID, pagination);
+        Slice<User> usersSlice = friendshipRepository.getBlockedUsersByUserID(currentUser.getUserID(), pagination);
         
         // Crear respuesta paginada
         Block<User> block = createBlockFromSlice(usersSlice);
@@ -313,7 +313,7 @@ UserServiceImpl implements UserService {
     
         // Obtener amigos del usuario
         Pageable pagination = PageRequest.of(page, pageSize);
-        Slice<User> usersSlice = friendshipRepository.getFriendsByUser(userID, pagination);
+        Slice<User> usersSlice = friendshipRepository.getFriendsByUser(currentUser.getUserID(), pagination);
         
         // Crear respuesta paginada
         Block<User> block = createBlockFromSlice(usersSlice);
@@ -395,7 +395,9 @@ UserServiceImpl implements UserService {
     }
     
     @Override
-    public Friendship addFriendToGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, InstanceAlreadyExistsException {
+    public Friendship addFriendToGroup(UUID requestorUserID, UUID targetUserID, UUID groupID)
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, InstanceAlreadyExistsException,
+                   NonExistentFriendshipException, BlockedUserException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
         
@@ -406,8 +408,14 @@ UserServiceImpl implements UserService {
         // Comprobar si existe el grupo
         Group group = fetchGroup(groupID);
         
-        // Asignar grupo a la amistad entre ambos usuarios
+        // Comprobar si existe alguna relación entre los usuarios o si no están bloqueados
         Friendship usersFriendship = getFriendshipBetweenUsers(groupOwner, targetUser);
+        if (usersFriendship == null)
+            throw new NonExistentFriendshipException(requestorUserID, targetUserID);
+        if (usersFriendship != null && usersFriendship.getStatus().equals(FriendshipStatusCodes.BLOCKED))
+            throw new BlockedUserException(targetUserID);
+        
+        // Asignar grupo a la amistad entre ambos usuarios
         if (usersFriendship.getGroup() != null)
             throw new InstanceAlreadyExistsException(Group.class.getName(), targetUserID);
         usersFriendship.setGroup(group);
@@ -416,7 +424,9 @@ UserServiceImpl implements UserService {
     }
     
     @Override
-    public Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID) throws InstanceNotFoundException, TargetUserIsCurrentUserException {
+    public Friendship removeFriendFromGroup(UUID requestorUserID, UUID targetUserID, UUID groupID)
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, UserNotInGroupException,
+                   NonExistentFriendshipException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
     
@@ -429,8 +439,11 @@ UserServiceImpl implements UserService {
     
         // Asignar grupo a la amistad entre ambos usuarios
         Friendship usersFriendship = getFriendshipBetweenUsers(groupOwner, targetUser);
-        if (usersFriendship.getGroup() != null)
-            throw new InstanceNotFoundException(targetUserID.toString(), group);
+        if (usersFriendship == null)
+            throw new NonExistentFriendshipException(requestorUserID, targetUserID);
+        
+        if (usersFriendship.getGroup() == null)
+            throw new UserNotInGroupException(targetUserID, group.getGroupID());
         usersFriendship.setGroup(null);
     
         return friendshipRepository.save(usersFriendship);

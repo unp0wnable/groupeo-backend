@@ -15,8 +15,7 @@ import java.util.*;
 @UtilityClass
 public class TestDataGenerator {
     // INFO: https://stackoverflow.com/questions/64580412/generate-valid-deterministic-uuids-for-tests
-    public static final UUID NON_EXISTENT_USER_ID = UUID.fromString("00000000-0000-4000-8000-000000000000");
-    public static final UUID NON_EXISTENT_ADDRESS_ID = UUID.fromString("00000001-0000-4000-8000-000000000000");
+    public static final UUID NON_EXISTENT_UUID = UUID.fromString("00000000-0000-4000-8000-000000000000");
     public static final String NON_EXISTENT_NICKNAME = "NON_EXISTENT_NICKNAME";
     public static final String DEFAULT_NICKNAME = "nickName";
     public static final String DEFAULT_PASSWORD = "password";
@@ -77,7 +76,7 @@ public class TestDataGenerator {
     }
     
     public static List<User> registerMultipleUsers(int ammountOfUsers, UserService service) throws InstanceAlreadyExistsException {
-        List<User> listOfUsers = new ArrayList<User>();
+        List<User> listOfUsers = new ArrayList<>();
         
         for ( int i=1; i <= ammountOfUsers; i++ ) {
             User auxUser = registerValidUser("Target" + i, service);
