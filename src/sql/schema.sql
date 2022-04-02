@@ -16,7 +16,7 @@ DROP TABLE IF EXISTS UserProfile;
 /* ******************** CREATE TABLES ******************** */
 /* *************** ACCOUNTS *************** */
 CREATE TABLE UserProfile (
-    userID        UUID          DEFAULT uuid_generate_v4(),
+    userID        UUID          DEFAULT uuid_generate_v1(),
     firstName     VARCHAR(30)   NOT NULL,
     surname1      VARCHAR(50),
     surname2      VARCHAR(50),
@@ -87,9 +87,9 @@ CREATE TABLE Friendship(
     CONSTRAINT FK_Friendship_SpecifierID_TO_UserProfile FOREIGN KEY (specifierID)
         REFERENCES UserProfile(userID)
         ON DELETE SET NULL
-        ON UPDATE CASCADE,
+        ON UPDATE CASCADE
     -- Restricción para identificar unívocamente las amistades entre usuarios --
-    CONSTRAINT CHK_FriendshipPKIsUnequivocal CHECK (requesterID < targetID)
+    --CONSTRAINT CHK_FriendshipPKIsUnequivocal CHECK (requesterID < targetID)
 );
 
 

@@ -9,4 +9,6 @@ public class Block<T> {
     private List<T> items;
     private int itemsCount;
     private boolean hasMoreItems;
+    
+    public boolean hasMoreItems() {return hasMoreItems;}
 }

@@ -36,16 +36,17 @@ public interface UserService {
     
     Friendship acceptFriendshipRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
                                                                                        TargetUserIsCurrentUserException,
-                                                                                       NonExistentFriendshipRequestException,
+                                                                                       NonExistentFriendshipException,
                                                                                        TargetUserIsAlreadyFriendException;
     
     Friendship declineFriendshipRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
                                                                                         TargetUserIsCurrentUserException,
-                                                                                        NonExistentFriendshipRequestException;
+                                                                                        NonExistentFriendshipException;
     
     Friendship blockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
     
-    void unblockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
+    void unblockFriend(UUID requestorUserID, UUID targetUserID)
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipException;
     
     Block<User> getBlockedUsers(UUID userID, int page, int pageSize) throws InstanceNotFoundException;
     

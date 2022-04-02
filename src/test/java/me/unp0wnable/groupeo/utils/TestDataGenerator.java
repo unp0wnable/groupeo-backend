@@ -75,4 +75,15 @@ public class TestDataGenerator {
         
         return service.signUp(user);
     }
+    
+    public static List<User> registerMultipleUsers(int ammountOfUsers, UserService service) throws InstanceAlreadyExistsException {
+        List<User> listOfUsers = new ArrayList<User>();
+        
+        for ( int i=1; i <= ammountOfUsers; i++ ) {
+            User auxUser = registerValidUser("Target" + i, service);
+            listOfUsers.add(auxUser);
+        }
+        
+        return listOfUsers;
+    }
 }

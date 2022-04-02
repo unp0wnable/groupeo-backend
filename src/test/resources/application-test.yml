@@ -2,15 +2,18 @@ logging:
   level:
     org:
       hibernate:
-        SQL: trace
+        SQL: DEBUG
+        type: TRACE
 
 spring:
+  jpa:
+    show-sql: true
   datasource:
     url: jdbc:postgresql://ec2-54-170-163-224.eu-west-1.compute.amazonaws.com:5432/ddg41jad2a6leh
     username: nyjlmwrgaqfgvo
     password: 98b3b230e208d2675242fa595b2ea38aa754b76fa2f6dba3214485ea445afa48
     tomcat:
-      max-active: 2
+      max-active: 4
       max-idle: 2
       remove-abandoned: true
-      remove-abandoned-timeout: 5
+      remove-abandoned-timeout: 10

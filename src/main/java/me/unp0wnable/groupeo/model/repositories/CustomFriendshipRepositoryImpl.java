@@ -16,18 +16,11 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
     public Slice<User> getFriendsByUser(UUID userID, Pageable pageable) {
         // Consultas a realizar
         // Obtener usuarios que son amigos del usuario actual
-        String currentUserFriendsQuery =
-            "SELECT f.id.targetID FROM Friendship f WHERE f.id.requesterID = :userID AND f.status = :acceptedStatus";
-        // Obtener gente que tiene al usuario actual como amigo
-        String friendsWithCurrentUserQuery =
-            "SELECT f.id.requesterID FROM Friendship f WHERE f.id.targetID = :userID AND f.status = :acceptedStatus";
-        String unionQuery = currentUserFriendsQuery
-                + " UNION DISTINCT "
-                + friendsWithCurrentUserQuery
-                + " ORDER BY nickName ASC";
+        String selectQuery =
+            "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status = :acceptedStatus ORDER BY nickName ASC";
     
         // Construir consulta y substituir parámetros
-        Query query = createPaginatedQuery(unionQuery, pageable)
+        Query query = createPaginatedQuery(selectQuery, pageable)
                 .setParameter("userID", userID.toString())
                 .setParameter("acceptedStatus", FriendshipStatusCodes.ACCEPTED.toString());
         
@@ -57,11 +50,11 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
     public Slice<User> getBlockedUsersByUserID(UUID userID, Pageable pageable) {
         // Consultas a realizar
         String selectQuery =
-            "SELECT f.id.targetID FROM Friendship f WHERE f.id.requesterID = ?1 AND f.status = 'BLOCKED' ORDER BY f.id.targetID.nickName ASC";
+            "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status LIKE 'BLOCKED' ORDER BY f.id.requesterID ASC";
     
         // Construir consulta y substituir parámetros
         Query query = createPaginatedQuery(selectQuery, pageable)
-            .setParameter("", null);
+            .setParameter("userID", userID);
     
         // Ejecutar consulta y obtener resultados
         List<User> queryItems = query.getResultList();

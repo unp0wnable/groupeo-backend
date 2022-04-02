@@ -149,7 +149,7 @@ UserServiceImpl implements UserService {
         if ( usersFriendship != null) {
             switch ( usersFriendship.getStatus() ) {
                 // Comprobar que los usuarios no estén bloqueados
-                case BLOQUED:
+                case BLOCKED:
                     throw new BlockedUserException(targetUserID);
                 // Comprobar que no exista alguna petición de amistad sin responder
                 case REQUESTED:
@@ -169,7 +169,7 @@ UserServiceImpl implements UserService {
             usersFriendship.setStatus(FriendshipStatusCodes.REQUESTED);
         }
         
-        return usersFriendship;
+        return friendshipRepository.save(usersFriendship);
     }
     
     @Override
@@ -188,7 +188,7 @@ UserServiceImpl implements UserService {
             throw new TargetUserIsNotFriendException(targetUserID);
             
         // Si el usuario objetivo está bloqueado, no se puede modifiar la amistad
-        if (friendship.getStatus().equals(FriendshipStatusCodes.BLOQUED))
+        if (friendship.getStatus().equals(FriendshipStatusCodes.BLOCKED))
             throw new BlockedUserException(targetUserID);
         
         // Elimina la entidad de la BD
@@ -197,10 +197,11 @@ UserServiceImpl implements UserService {
     
     @Override
     public Friendship acceptFriendshipRequest(UUID requestorUserID, UUID targetUserID)
-            throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException,
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipException,
                    TargetUserIsAlreadyFriendException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
-        if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
+        if (requestorUserID.equals(targetUserID))
+            throw new TargetUserIsCurrentUserException();
     
         // Obtener a los usuarios
         User requestorUser = fetchUser(requestorUserID);
@@ -210,19 +211,20 @@ UserServiceImpl implements UserService {
         Friendship friendship = getFriendshipBetweenUsers(requestorUser, targetUser);
         
         // Si no hay petición de amistad, no se puede aceptar
-        if (friendship == null) throw new NonExistentFriendshipRequestException(requestorUserID, targetUserID);
+        if (friendship == null) throw new NonExistentFriendshipException(requestorUserID, targetUserID);
         
         // Solo se acepta la petición si no está aceptada previamente
         if (friendship.getStatus().equals(FriendshipStatusCodes.ACCEPTED))
             throw new TargetUserIsAlreadyFriendException(targetUserID);
         // Cambiar el estado de la amistad a ACEPTADA por parte del usuario actual
-        Friendship updatedFriendship = updateFriendhipStatus(friendship, targetUser, FriendshipStatusCodes.ACCEPTED);
+        Friendship updatedFriendship = updateFriendhipStatus(friendship, requestorUser, FriendshipStatusCodes.ACCEPTED);
         
         return friendshipRepository.save(updatedFriendship);
     }
     
     @Override
-    public Friendship declineFriendshipRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipRequestException {
+    public Friendship declineFriendshipRequest(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException,
+                                                                                               NonExistentFriendshipException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
     
@@ -234,7 +236,7 @@ UserServiceImpl implements UserService {
         Friendship friendship = getFriendshipBetweenUsers(requestorUser, targetUser);
     
         // Si no hay petición de amistad, ńo se puede denegar
-        if (friendship == null) throw new NonExistentFriendshipRequestException(requestorUserID, targetUserID);
+        if (friendship == null) throw new NonExistentFriendshipException(requestorUserID, targetUserID);
     
         // Cambiar el estado de la amistad a ACEPTADA por parte del usuario actual
         Friendship updatedFriendship = updateFriendhipStatus(friendship, requestorUser, FriendshipStatusCodes.DECLINED);
@@ -260,15 +262,19 @@ UserServiceImpl implements UserService {
             FriendshipPK friendshipPK = new FriendshipPK(requestorUserID, targetUserID);
             friendship.setId(friendshipPK);
         }
+        // Si usuario ya estaba bloqueado, no se hace nada
+        if (friendship.getStatus() != null && friendship.getStatus().equals(FriendshipStatusCodes.BLOCKED))
+            return friendship;
         
         // Asigna el estado de la relación a BLOQUEADO
-        Friendship updatedFriendship = updateFriendhipStatus(friendship, targetUser, FriendshipStatusCodes.BLOQUED);
+        Friendship updatedFriendship = updateFriendhipStatus(friendship, requestorUser, FriendshipStatusCodes.BLOCKED);
         
         return friendshipRepository.save(updatedFriendship);
     }
     
     @Override
-    public void unblockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException {
+    public void unblockFriend(UUID requestorUserID, UUID targetUserID)
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
     
@@ -276,8 +282,12 @@ UserServiceImpl implements UserService {
         User requestorUser = fetchUser(requestorUserID);
         User targetUser = fetchUser(targetUserID);
     
-        // Obtener la amistad actual y eliminarla
+        // Obtener la amistad actual
         Friendship friendship = getFriendshipBetweenUsers(requestorUser, targetUser);
+        // Si no hay ningún bloqueo, no se puede desbloquear
+        if (friendship == null) throw new NonExistentFriendshipException(requestorUserID, targetUserID);
+        
+        
         friendshipRepository.delete(friendship);
     }
     
@@ -495,14 +505,14 @@ UserServiceImpl implements UserService {
         friendship.setSpecifier(specifierUser);
         friendship.setLastUpdate(getCurrentTime());
         
-        return friendship;
+        return friendshipRepository.save(friendship);
     }
     
     /** Crea un objeto Block a partir de un Slice */
     private <T> Block<T> createBlockFromSlice(Slice<T> slice) {
         Block<T> block = new Block<>();
         block.setItems(slice.getContent());
-        block.setItemsCount(slice.getSize());
+        block.setItemsCount(slice.getContent().size());
         block.setHasMoreItems(slice.hasNext());
         
         return block;

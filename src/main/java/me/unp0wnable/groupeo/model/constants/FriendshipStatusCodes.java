@@ -4,5 +4,5 @@ public enum FriendshipStatusCodes {
     REQUESTED,
     ACCEPTED,
     DECLINED,
-    BLOQUED
+    BLOCKED
 }
