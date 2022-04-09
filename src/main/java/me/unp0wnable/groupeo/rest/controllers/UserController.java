@@ -1,9 +1,10 @@
 package me.unp0wnable.groupeo.rest.controllers;
 
-import me.unp0wnable.groupeo.model.entities.User;
-import me.unp0wnable.groupeo.model.entities.UserAddress;
+import me.unp0wnable.groupeo.model.entities.*;
 import me.unp0wnable.groupeo.model.exceptions.*;
 import me.unp0wnable.groupeo.model.services.UserService;
+import me.unp0wnable.groupeo.rest.dtos.common.BlockDto;
+import me.unp0wnable.groupeo.rest.dtos.conversors.CommonConversor;
 import me.unp0wnable.groupeo.rest.dtos.conversors.UserConversor;
 import me.unp0wnable.groupeo.rest.dtos.errors.ErrorsDto;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
@@ -25,15 +26,20 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
     @Autowired
-    UserService userService;
+    private UserService userService;
     @Autowired
-    JwtGenerator jwtGenerator;
+    private JwtGenerator jwtGenerator;
     @Autowired
-    MessageSource messageSource;
+    private MessageSource messageSource;
+    
     
     /* ********************************************* EXCEPTION HANDLERS ********************************************* */
-    private static final String INCORRECT_LOGIN_EXCEPTION_KEY = "project.exceptions.IncorrectLoginException";
-    private static final String INCORRECT_PASSWORD_EXCEPTION_KEY = "project.exceptions.IncorrectPasswordException";
+    private static final String INCORRECT_LOGIN_EXCEPTION_KEY                   = "project.exceptions.user.IncorrectLoginException";
+    private static final String INCORRECT_PASSWORD_EXCEPTION_KEY                = "project.exceptions.user.IncorrectPasswordException";
+    private static final String NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY           = "project.exceptions.user.NonExistentFriendshipException";
+    private static final String TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY     = "project.exceptions.user.TargetUserIsAlreadyFriendException";
+    private static final String USER_NOT_IN_GROUP_EXCEPTION_KEY                 = "project.exceptions.user.UserNotInGroupException";
+    
     
     
     @ExceptionHandler(IncorrectLoginException.class)
@@ -58,8 +64,41 @@ public class UserController {
         return new ErrorsDto(errorMessage);
     }
     
+    @ExceptionHandler(NonExistentFriendshipException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public ErrorsDto handleNonExistentFriendshipException(NonExistentFriendshipException exception, Locale locale) {
+        String errorMessage = messageSource.getMessage(
+                NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY, null, NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY, locale
+        );
+        
+        return new ErrorsDto(errorMessage);
+    }
+    
+    @ExceptionHandler(TargetUserIsAlreadyFriendException.class)
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @ResponseBody
+    public ErrorsDto handleTargetUserIsAlreadyFriendException(TargetUserIsAlreadyFriendException exception, Locale locale) {
+        String errorMessage = messageSource.getMessage(
+                TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY, null, TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY, locale
+        );
+        
+        return new ErrorsDto(errorMessage);
+    }
+    
+    @ExceptionHandler(UserNotInGroupException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public ErrorsDto handleUserNotInGroupException(UserNotInGroupException exception, Locale locale) {
+        String errorMessage = messageSource.getMessage(
+                USER_NOT_IN_GROUP_EXCEPTION_KEY, null, USER_NOT_IN_GROUP_EXCEPTION_KEY, locale
+        );
+        
+        return new ErrorsDto(errorMessage);
+    }
     
     /* ************************************************* ENDPOINTS ************************************************* */
+    /* *********************************** User profile *********************************** */
     @PostMapping("/signUp")
     public ResponseEntity<AuthenticatedUserDto> signUp(@Validated @RequestBody SignUpParamsDto params)
             throws InstanceAlreadyExistsException {
@@ -76,12 +115,10 @@ public class UserController {
         AuthenticatedUserDto authUserDto = UserConversor.toAuthenticatedUserDTO(signedUpUser, token);
         
         // Crea la respuesta HTTP y la envía
-        ResponseEntity<AuthenticatedUserDto> response = ResponseEntity
+        return ResponseEntity
                 .created(resourceLocation)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(authUserDto);
-        
-        return response;
     }
     
     
@@ -124,7 +161,7 @@ public class UserController {
     }
     
     
-    @PutMapping("/{userID}/update")
+    @PutMapping("/{userID}")
     public UserDto updateProfile(@RequestAttribute UUID userID, @PathVariable("userID") UUID pathUserID,
                                 @Validated @RequestBody UpdateProfileParamsDto params)
             throws PermissionException, InstanceNotFoundException {
@@ -172,11 +209,282 @@ public class UserController {
         userService.deleteUser(userID);
         
         // Generar respuesta
-        ResponseEntity<Void> response = ResponseEntity.noContent().build();
-        
-        return response;
+        return ResponseEntity.noContent()
+                             .build();
     }
     
+    /* *********************************** User relationships *********************************** */
+    @PostMapping("/friends/{requestorID}/add/{targetID}")
+    public FriendshipDto requestFriendship(@RequestAttribute UUID userID,
+                                           @PathVariable("requestorID") UUID requestorID,
+                                           @PathVariable("targetID") UUID targetID)
+            throws PermissionException, BlockedUserException, TargetUserIsCurrentUserException,
+                   TargetUserIsAlreadyFriendException, InstanceNotFoundException, InstanceAlreadyExistsException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Enviar petición de amistad al usuario objetivo en el servicio
+        Friendship friendshipRequest = userService.requestFriendship(userID, targetID);
+        
+        // Generar respuesta
+        return UserConversor.toFriendshipDTO(friendshipRequest);
+    }
+    
+    @DeleteMapping("/friends/{requestorID}/remove/{targetID}")
+    public ResponseEntity<Void> removeFriend(@RequestAttribute UUID userID,
+                                             @PathVariable("requestorID") UUID requestorID,
+                                             @PathVariable("targetID") UUID targetID)
+            throws PermissionException, BlockedUserException, TargetUserIsCurrentUserException, TargetUserIsNotFriendException,
+                   InstanceNotFoundException{
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Eliminar amigo en el servicio
+        userService.removeFriend(userID, targetID);
+        
+        // Generar respuesta
+        return ResponseEntity.noContent()
+                             .build();
+    }
+    
+    @PostMapping("/friends/{requestorID}/accept/{targetID}")
+    public FriendshipDto acceptFriend(@RequestAttribute UUID userID,
+                                      @PathVariable("requestorID") UUID requestorID,
+                                      @PathVariable("targetID") UUID targetID)
+            throws PermissionException, TargetUserIsCurrentUserException, TargetUserIsAlreadyFriendException,
+                   InstanceNotFoundException, NonExistentFriendshipException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Aceptar petición de amistad al usuario objetivo en el servicio
+        Friendship friendship = userService.acceptFriendshipRequest(userID, targetID);
+        
+        // Generar respuesta
+        return UserConversor.toFriendshipDTO(friendship);
+    }
+    
+    @PostMapping("/friends/{requestorID}/decline/{targetID}")
+    public FriendshipDto declineFriendship(@RequestAttribute UUID userID,
+                                           @PathVariable("requestorID") UUID requestorID,
+                                           @PathVariable("targetID") UUID targetID)
+            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException, NonExistentFriendshipException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Aceptar petición de amistad al usuario objetivo en el servicio
+        Friendship declinedFriendship = userService.declineFriendshipRequest(userID, targetID);
+        
+        // Generar respuesta
+        return UserConversor.toFriendshipDTO(declinedFriendship);
+    }
+    
+    @PostMapping("/friends/{requestorID}/block/{targetID}")
+    public FriendshipDto blockFriend(@RequestAttribute UUID userID,
+                                     @PathVariable("requestorID") UUID requestorID,
+                                     @PathVariable("targetID") UUID targetID)
+            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Bloquear amigo en el servicio
+        Friendship blockedFriendship = userService.blockFriend(userID, targetID);
+        
+        // Generar respuesta
+        return UserConversor.toFriendshipDTO(blockedFriendship);
+    }
+    
+    @PostMapping("/friends/{requestorID}/unblock/{targetID}")
+    public ResponseEntity<Void> unblockFriend(@RequestAttribute UUID userID,
+                                              @PathVariable("requestorID") UUID requestorID,
+                                              @PathVariable("targetID") UUID targetID)
+            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   NonExistentFriendshipException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Desbloquear amigo en el servicio
+        userService.unblockFriend(userID, targetID);
+        
+        // Generar respuesta
+        return ResponseEntity.noContent()
+                             .build();
+    }
+    
+    @GetMapping("/friends/{requestorID}/blocked")
+    public BlockDto<UserDto> getBlockedUsers(@RequestAttribute UUID userID,
+                                             @PathVariable("requestorID") UUID requestorID,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "10") int pageSize)
+            throws PermissionException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Obtener usuarios bloqueados por el usuario desde el servicio
+        Block<User> usersBlock = userService.getBlockedUsers(userID, page, pageSize);
+        
+        // Generar respuesta
+        return CommonConversor.toBlockDTO(usersBlock, UserConversor::toUserDto);
+    }
+    
+    @GetMapping("/friends/{requestorID}")
+    public BlockDto<UserDto> getUserFriends(@RequestAttribute UUID userID,
+                                            @PathVariable("requestorID") UUID requestorID,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int pageSize)
+            throws PermissionException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Obtener usuarios bloqueados por el usuario desde el servicio
+        Block<User> usersBlock = userService.getUserFriends(userID, page, pageSize);
+        
+        // Generar respuesta
+        return CommonConversor.toBlockDTO(usersBlock, UserConversor::toUserDto);
+    }
+    
+    @GetMapping("/friends/{requestorID}/friendship/{targetID}")
+    public FriendshipDto getFriendshipDataBetweenUsers(@RequestAttribute UUID userID,
+                                                       @PathVariable("requestorID") UUID requestorID,
+                                                       @PathVariable("targetID") UUID targetID)
+            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, requestorID)) {
+            throw new PermissionException();
+        }
+        
+        // Aceptar petición de amistad al usuario objetivo en el servicio
+        Friendship friendshipData = userService.getFriendshipInfoWithUser(userID, targetID);
+        
+        // Generar respuesta
+        return UserConversor.toFriendshipDTO(friendshipData);
+    }
+    
+    @PostMapping("/friends/{userID}/groups")
+    public GroupDto createGroup(@RequestAttribute UUID userID,
+                                @PathVariable("userID") UUID pathUserID,
+                                @RequestBody CreateGroupParamsDto paramsDto)
+            throws PermissionException, InstanceAlreadyExistsException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, pathUserID)) {
+            throw new PermissionException();
+        }
+        
+        // Crear grupo
+        Group group = userService.createGroup(userID, paramsDto.getName());
+        
+        // Generar respuesta
+        return UserConversor.toGroupDTO(group);
+    }
+    
+    @DeleteMapping("/friends/{userID}/groups/{groupID}")
+    public ResponseEntity<Void> deleteGroup(@RequestAttribute UUID userID,
+                                            @PathVariable("userID") UUID pathUserID,
+                                            @PathVariable("groupID") UUID groupID)
+            throws PermissionException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, pathUserID)) {
+            throw new PermissionException();
+        }
+        
+        // Borrar grupo
+        userService.deleteGroup(userID, groupID);
+        
+        // Generar respuesta
+        return ResponseEntity.noContent()
+                             .build();
+    }
+    
+    @PutMapping("/friends/{userID}/groups/{groupID}")
+    public GroupDto updateGroup(@RequestAttribute UUID userID,
+                                @PathVariable("userID") UUID pathUserID,
+                                @PathVariable("groupID") UUID groupID,
+                                @RequestBody GroupDto paramsDto)
+            throws PermissionException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, pathUserID)) {
+            throw new PermissionException();
+        }
+        
+        // Actualizar datos del grupo
+        Group groupdData = UserConversor.fromGroupDTO(paramsDto);
+        Group group = userService.updateGroupData(userID, groupID, groupdData);
+        
+        // Generar respuesta
+        return UserConversor.toGroupDTO(group);
+    }
+    
+    @GetMapping("/friends/{userID}/groups/{groupID}/people")
+    public BlockDto<UserDto> getFriendsFromGroup(@RequestAttribute UUID userID,
+                                                 @PathVariable("userID") UUID pathUserID,
+                                                 @PathVariable("groupID") UUID groupID,
+                                                 @RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "10") int pageSize)
+            throws PermissionException, InstanceNotFoundException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, pathUserID)) {
+            throw new PermissionException();
+        }
+        
+        // Obtener miembros del grupo
+        Block<User> usersBlock = userService.getFriendsFromGroup(groupID, page, pageSize);
+        
+        // Generar respuesta
+        return CommonConversor.toBlockDTO(usersBlock, UserConversor::toUserDto);
+    }
+    
+    @PostMapping("/friends/{userID}/groups/{groupID}/add/{targetID}")
+    public FriendshipDto addUserToGroup(@RequestAttribute UUID userID,
+                                        @PathVariable("userID") UUID pathUserID,
+                                        @PathVariable("groupID") UUID groupID,
+                                        @PathVariable("targetID") UUID targetUserID)
+            throws PermissionException, InstanceNotFoundException, NonExistentFriendshipException,
+                   TargetUserIsCurrentUserException, InstanceAlreadyExistsException, BlockedUserException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, pathUserID)) {
+            throw new PermissionException();
+        }
+        
+        // Añadir usuario al grupo
+        Friendship updatedFriendship = userService.addFriendToGroup(userID, targetUserID, groupID);
+        
+        // Generar respuesta
+        return UserConversor.toFriendshipDTO(updatedFriendship);
+    }
+    
+    @DeleteMapping("/friends/{userID}/groups/{groupID}/remove/{targetID}")
+    public FriendshipDto removeUserFromGroup(@RequestAttribute UUID userID,
+                                           @PathVariable("userID") UUID pathUserID,
+                                           @PathVariable("groupID") UUID groupID,
+                                           @PathVariable("targetID") UUID targetUserID)
+            throws PermissionException, InstanceNotFoundException, NonExistentFriendshipException,
+                   TargetUserIsCurrentUserException, UserNotInGroupException {
+        // Comprobar que el usuario actual es quién dice ser
+        if (!doUsersMatch(userID, pathUserID)) {
+            throw new PermissionException();
+        }
+        
+        // Añadir usuario al grupo
+        Friendship updatedFriendship = userService.removeFriendFromGroup(userID, targetUserID, groupID);
+        
+        // Generar respuesta
+        return UserConversor.toFriendshipDTO(updatedFriendship);
+    }
     
     /* ************************************************* AUX METHODS ************************************************* */
     /** Genera un JWT para el usuario actual */

@@ -23,11 +23,11 @@ public interface UserService {
     
     
     /* *********************************** User relationships *********************************** */
-    Friendship addFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
-                                                                         TargetUserIsCurrentUserException,
-                                                                         TargetUserIsAlreadyFriendException,
-                                                                         BlockedUserException,
-                                                                         InstanceAlreadyExistsException;
+    Friendship requestFriendship(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
+                                                                                 TargetUserIsCurrentUserException,
+                                                                                 TargetUserIsAlreadyFriendException,
+                                                                                 BlockedUserException,
+                                                                                 InstanceAlreadyExistsException;
     
     void removeFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
                                                                       TargetUserIsCurrentUserException,
@@ -45,8 +45,8 @@ public interface UserService {
     
     Friendship blockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException;
     
-    void unblockFriend(UUID requestorUserID, UUID targetUserID)
-            throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipException;
+    void unblockFriend(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException,
+                                                                       NonExistentFriendshipException;
     
     Block<User> getBlockedUsers(UUID userID, int page, int pageSize) throws InstanceNotFoundException;
     

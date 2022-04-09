@@ -134,7 +134,7 @@ UserServiceImpl implements UserService {
     
     /* *********************************** User relationships *********************************** */
     @Override
-    public Friendship addFriend(UUID requestorUserID, UUID targetUserID)
+    public Friendship requestFriendship(UUID requestorUserID, UUID targetUserID)
             throws InstanceNotFoundException, TargetUserIsCurrentUserException, TargetUserIsAlreadyFriendException,
                    BlockedUserException, InstanceAlreadyExistsException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
@@ -355,10 +355,10 @@ UserServiceImpl implements UserService {
     @Override
     public void deleteGroup(UUID ownerID, UUID groupID) throws InstanceNotFoundException {
         // Comprobar si existe el propietario del grupo
-        User groupOwner = fetchUser(ownerID);
+        fetchUser(ownerID);
         
         // Comprobar si existe el grupo
-        Group group = fetchGroup(groupID);
+        fetchGroup(groupID);
         
         // Eliminar el grupo
         groupRepository.deleteById(groupID);
@@ -367,7 +367,7 @@ UserServiceImpl implements UserService {
     @Override
     public Group updateGroupData(UUID ownerID, UUID groupId, Group groupData) throws InstanceNotFoundException {
         // Comprobar si existe el propietario del grupo
-        User groupOwner = fetchUser(ownerID);
+        fetchUser(ownerID);
     
         // Comprobar si existe el grupo
         Group group = fetchGroup(groupId);
@@ -382,7 +382,7 @@ UserServiceImpl implements UserService {
     @Override
     public Block<User> getFriendsFromGroup(UUID groupID, int page, int pageSize) throws InstanceNotFoundException {
         // Comprobar si existe el grupo
-        Group group = fetchGroup(groupID);
+        fetchGroup(groupID);
     
         // Obtener amigos del grupo
         Pageable pagination = PageRequest.of(page, pageSize);
@@ -412,7 +412,7 @@ UserServiceImpl implements UserService {
         Friendship usersFriendship = getFriendshipBetweenUsers(groupOwner, targetUser);
         if (usersFriendship == null)
             throw new NonExistentFriendshipException(requestorUserID, targetUserID);
-        if (usersFriendship != null && usersFriendship.getStatus().equals(FriendshipStatusCodes.BLOCKED))
+        if (usersFriendship.getStatus().equals(FriendshipStatusCodes.BLOCKED))
             throw new BlockedUserException(targetUserID);
         
         // Asignar grupo a la amistad entre ambos usuarios

@@ -2,9 +2,11 @@ package me.unp0wnable.groupeo.rest.dtos.conversors;
 
 import lombok.experimental.UtilityClass;
 import me.unp0wnable.groupeo.model.constants.UserRoles;
-import me.unp0wnable.groupeo.model.entities.User;
-import me.unp0wnable.groupeo.model.entities.UserAddress;
+import me.unp0wnable.groupeo.model.entities.*;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class UserConversor {
@@ -46,8 +48,35 @@ public class UserConversor {
         return new AuthenticatedUserDto(token, toUserDto(user));
     }
     
-
-    /* ******************** Convertir a Entidades ******************** */
+    public static FriendshipDto toFriendshipDTO(Friendship friendship) {
+        FriendshipDto dto = new FriendshipDto();
+        dto.setRequesterID(friendship.getId().getRequesterID());
+        dto.setTargetID(friendship.getId().getTargetID());
+        dto.setSpecifierID(friendship.getSpecifier().getUserID());
+        dto.setGroupID(friendship.getGroup().getGroupID());
+        dto.setStatus(friendship.getStatus().name());
+        dto.setLastUpdate(friendship.getLastUpdate());
+        
+        return dto;
+    }
+    
+    public static GroupDto toGroupDTO(Group group) {
+        GroupDto dto = new GroupDto();
+        dto.setGroupID(group.getGroupID());
+        dto.setCreatorID(group.getCreator().getUserID());
+        dto.setName(group.getName());
+        
+        return dto;
+    }
+    
+    /* ******************** Convertir a conjunto de DTO ******************** */
+    public static List<UserDto> toUserDtoList(List<User> userList) {
+        return userList.stream()
+                .map(UserConversor::toUserDto)
+                .collect(Collectors.toList());
+    }
+    
+    /* ******************** Convertir a Entidad ******************** */
     public static User fromUserDTO(UserDto dto) {
         User user = new User();
         user.setUserID(dto.getUserID());
@@ -102,4 +131,12 @@ public class UserConversor {
         
         return address;
     }
+    
+    public static Group fromGroupDTO(GroupDto dto) {
+        Group group = new Group();
+        group.setName(dto.getName());
+        
+        return group;
+    }
+
 }

@@ -14,5 +14,8 @@ public class BlockDto<T> {
     private List<T> items;
     
     @NotNull
+    private int itemsCount;
+    
+    @NotNull
     private boolean hasMoreItems;
 }

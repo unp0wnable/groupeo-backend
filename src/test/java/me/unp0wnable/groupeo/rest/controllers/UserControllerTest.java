@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Transactional
 public class UserControllerTest {
-    private final String API_ENDPOINT = "/api/users";
+    private static final  String API_ENDPOINT = "/api/users";
     private final ObjectMapper mapper = new ObjectMapper();
     
     @Autowired
@@ -386,7 +386,7 @@ public class UserControllerTest {
         paramsDto.setSurname2(authUserDto.getUserDTO().getSurname2() + "XXX");
         paramsDto.setEmail(authUserDto.getUserDTO().getEmail() + "XXX");
         paramsDto.setDescription(authUserDto.getUserDTO().getDescription() + "XXX");
-        String endpointAddress = API_ENDPOINT + "/" + userID + "/update";
+        String endpointAddress = API_ENDPOINT + "/" + userID;
         String encodedBodyContent = this.mapper.writeValueAsString(paramsDto);
         
         // Ejecutar funcionalidades
@@ -418,7 +418,7 @@ public class UserControllerTest {
         paramsDto.setSurname2(currentUserDto.getUserDTO().getSurname2() + "XXX");
         paramsDto.setEmail(currentUserDto.getUserDTO().getEmail() + "XXX");
         paramsDto.setDescription(currentUserDto.getUserDTO().getDescription() + "XXX");
-        String endpointAddress = API_ENDPOINT + "/" + targetUserID + "/update";
+        String endpointAddress = API_ENDPOINT + "/" + targetUserID;
         String encodedBodyContent = this.mapper.writeValueAsString(paramsDto);
         
         // Ejecutar funcionalidades
@@ -449,7 +449,7 @@ public class UserControllerTest {
         paramsDto.setSurname2(authUserDto.getUserDTO().getSurname2() + "XXX");
         paramsDto.setEmail(authUserDto.getUserDTO().getEmail() + "XXX");
         paramsDto.setDescription(authUserDto.getUserDTO().getDescription() + "XXX");
-        String endpointAddress = API_ENDPOINT + "/" + NON_EXISTENT_UUID + "/update";
+        String endpointAddress = API_ENDPOINT + "/" + NON_EXISTENT_UUID;
         String encodedBodyContent = this.mapper.writeValueAsString(paramsDto);
         
         // Ejecutar funcionalidades
