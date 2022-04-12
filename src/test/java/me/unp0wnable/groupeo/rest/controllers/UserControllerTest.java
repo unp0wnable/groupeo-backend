@@ -1,12 +1,16 @@
 package me.unp0wnable.groupeo.rest.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.unp0wnable.groupeo.model.entities.User;
-import me.unp0wnable.groupeo.model.entities.UserAddress;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import me.unp0wnable.groupeo.model.entities.*;
+import me.unp0wnable.groupeo.model.entities.identities.FriendshipPK;
 import me.unp0wnable.groupeo.model.exceptions.IncorrectLoginException;
-import me.unp0wnable.groupeo.model.repositories.UserAddressRepository;
-import me.unp0wnable.groupeo.model.repositories.UserRepository;
+import me.unp0wnable.groupeo.model.repositories.*;
+import me.unp0wnable.groupeo.model.services.UserService;
+import me.unp0wnable.groupeo.rest.dtos.common.BlockDto;
+import me.unp0wnable.groupeo.rest.dtos.conversors.CommonConversor;
 import me.unp0wnable.groupeo.rest.dtos.conversors.UserConversor;
+import me.unp0wnable.groupeo.rest.dtos.errors.ErrorsDto;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
 import me.unp0wnable.groupeo.rest.http.jwt.JwtData;
 import me.unp0wnable.groupeo.rest.http.jwt.JwtGenerator;
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import java.util.*;
 
 import static me.unp0wnable.groupeo.rest.security.JwtFilter.AUTH_TOKEN_PREFIX;
 import static me.unp0wnable.groupeo.utils.TestDataGenerator.*;
@@ -36,10 +41,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class UserControllerTest {
     private static final  String API_ENDPOINT = "/api/users";
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper()
+                                                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    private final Locale locale = Locale.getDefault();
     
     @Autowired
     private MockMvc mockMvc;
+    
+    @Autowired
+    private MessageSource messageSource;
     
     @Autowired
     private JwtGenerator jwtGenerator;
@@ -48,10 +58,16 @@ public class UserControllerTest {
     private UserController userController;
     
     @Autowired
+    private UserService userService;
+    
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private FriendshipRepository friendshipRepository;
     
     @Autowired
     private UserAddressRepository userAddressRepository;
@@ -59,8 +75,7 @@ public class UserControllerTest {
     
     /* ****************************** AUX FUNCTIONS ****************************** */
     /** Registra un usuario válido en el sistema */
-    private AuthenticatedUserDto createAuthenticatedUser(String nickName)
-            throws IncorrectLoginException {
+    private AuthenticatedUserDto createAuthenticatedUser(String nickName) throws IncorrectLoginException {
         // Crea un usuario válido
         User user = generateValidUser(nickName);
         user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
@@ -102,6 +117,29 @@ public class UserControllerTest {
         signUpParams.setImageB64(user.getImageB64());
         return signUpParams;
     }
+    
+    /** Recupera datos de una amistad entre dos usuarios y los devuelve como un DTO */
+    private FriendshipDto fetchFriendshipAsDTO(String requestorID, String targetID) {
+        UUID requestorUUID = UUID.fromString(requestorID);
+        UUID targetUUID = UUID.fromString(targetID);
+        FriendshipPK friendshipPK = new FriendshipPK(requestorUUID, targetUUID);
+        Friendship friendship = friendshipRepository.findById(friendshipPK).get();
+        
+        return UserConversor.toFriendshipDTO(friendship);
+    }
+    
+    /** Recupera el texto asociado a la propiedad recibida a partir del fichero de I18N en el idioma indicado. */
+    private String getI18NExceptionMessage(String propertyName, Locale locale) {
+        String globalErrorMessage = messageSource.getMessage(
+                propertyName,
+                null,
+                propertyName,
+                locale
+        );
+        
+        return globalErrorMessage;
+    }
+    
     
     
     /* ****************************** TEST CASES ****************************** */
@@ -640,4 +678,1104 @@ public class UserControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
+    
+    /* *********************************** User relationships *********************************** */
+    
+    @Test
+    public void testRequestFriendship_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/add/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        FriendshipDto expectedResponseBody = fetchFriendshipAsDTO(requestorUserID, targetUserID);
+        
+        
+        // Comprobar resultados
+        String encodedExpectedResponse = this.mapper.writeValueAsString(expectedResponseBody);
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(encodedExpectedResponse));
+    }
+    
+    @Test
+    public void testRequestFriendshipAsOtherUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/add/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(targetUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.PERMISSION_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRequestFriendshipToBlockedUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Boquear al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/add/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.BLOCKED_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRequestFriendshipToCurrentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/add/%s", API_ENDPOINT, requestorUserID, requestorUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRequestFriendshipToAlreadyFriendUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        userService.acceptFriendshipRequest(UUID.fromString(targetUserID), UUID.fromString(requestorUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/add/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(UserController.TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isAccepted())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRequestFriendshipToNonExistentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/add/%s", API_ENDPOINT, requestorUserID, NON_EXISTENT_UUID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_NOT_FOUND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRequestFriendshipTwice_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Enviar petición de amistad al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/add/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_ALREADY_EXISTS_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRemoveFriend_DELETE() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        userService.acceptFriendshipRequest(UUID.fromString(targetUserID), UUID.fromString(requestorUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/remove/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                delete(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNoContent());
+    }
+    
+    @Test
+    public void testRemoveFriendAsOtherUser_DELETE() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        userService.acceptFriendshipRequest(UUID.fromString(targetUserID), UUID.fromString(requestorUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/remove/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                delete(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(targetUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.PERMISSION_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRemoveFriendshipToBlockedUser_DELETE() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Boquear al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/remove/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                delete(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.BLOCKED_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRemoveFriendshipToCurrentUser_DELETE() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/remove/%s", API_ENDPOINT, requestorUserID, requestorUserID);
+        ResultActions performAction = mockMvc.perform(
+                delete(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRemoveFriendshipWithNonFriendUser_DELETE() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/remove/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                delete(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.TARGET_USER_IS_NOT_FRIEND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testRemoveFriendshipToNonExistentUser_DELETE() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/remove/%s", API_ENDPOINT, requestorUserID, NON_EXISTENT_UUID);
+        ResultActions performAction = mockMvc.perform(
+                delete(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_NOT_FOUND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testAcceptFriendshipRequest_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/accept/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        FriendshipDto expectedResponseBody = fetchFriendshipAsDTO(requestorUserID, targetUserID);
+        
+        
+        // Comprobar resultados
+        String encodedExpectedResponse = this.mapper.writeValueAsString(expectedResponseBody);
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(encodedExpectedResponse));
+    }
+    
+    @Test
+    public void testAcceptFriendshipRequestAsOtherUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/accept/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(targetUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.PERMISSION_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testAcceptFriendshipToCurrentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/accept/%s", API_ENDPOINT, requestorUserID, requestorUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testAcceptFriendshipToAlreadyFriendUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        userService.acceptFriendshipRequest(UUID.fromString(targetUserID), UUID.fromString(requestorUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/accept/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(UserController.TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isAccepted())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testAcceptFriendshipToNonExistentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/accept/%s", API_ENDPOINT, requestorUserID, NON_EXISTENT_UUID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_NOT_FOUND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testAcceptNonExistentFriendshipRequest_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/accept/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(UserController.NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testAcceptFriendshipTwice_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Enviar petición de amistad al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        userService.acceptFriendshipRequest(UUID.fromString(targetUserID), UUID.fromString(requestorUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/accept/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_ALREADY_EXISTS_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isAccepted())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testDeclineFriendshipRequest_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/decline/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        FriendshipDto expectedResponseBody = fetchFriendshipAsDTO(requestorUserID, targetUserID);
+        
+        // Comprobar resultados
+        String encodedExpectedResponse = this.mapper.writeValueAsString(expectedResponseBody);
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(encodedExpectedResponse));
+    }
+    
+    @Test
+    public void testDeclineFriendshipRequestAsOtherUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Añadir como amigo al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/decline/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(targetUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.PERMISSION_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testDeclineFriendshipToCurrentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/decline/%s", API_ENDPOINT, requestorUserID, requestorUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testDeclineFriendshipToNonExistentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/decline/%s", API_ENDPOINT, requestorUserID, NON_EXISTENT_UUID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_NOT_FOUND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testDeclineNonExistentFriendshipRequest_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/decline/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(UserController.NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testDeclineFriendshipTwice_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Enviar petición de amistad al usuario
+        userService.requestFriendship(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        userService.declineFriendshipRequest(UUID.fromString(targetUserID), UUID.fromString(requestorUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/decline/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        FriendshipDto expectedResponseBody = fetchFriendshipAsDTO(requestorUserID, targetUserID);
+        
+        // Comprobar resultados
+        String encodedExpectedResponse = this.mapper.writeValueAsString(expectedResponseBody);
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(encodedExpectedResponse));
+    }
+    
+    @Test
+    public void testBlockUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/block/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        FriendshipDto expectedResponseBody = fetchFriendshipAsDTO(requestorUserID, targetUserID);
+        
+        // Comprobar resultados
+        String encodedExpectedResponse = this.mapper.writeValueAsString(expectedResponseBody);
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(encodedExpectedResponse));
+    }
+    
+    @Test
+    public void testBlockUserAsOtherUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/block/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(targetUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.PERMISSION_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testBlockCurrentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/block/%s", API_ENDPOINT, requestorUserID, requestorUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testBlockNonExistentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/block/%s", API_ENDPOINT, requestorUserID, NON_EXISTENT_UUID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_NOT_FOUND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testBlockUserTwice_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Enviar petición de amistad al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/decline/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        FriendshipDto expectedResponseBody = fetchFriendshipAsDTO(requestorUserID, targetUserID);
+        
+        // Comprobar resultados
+        String encodedExpectedResponse = this.mapper.writeValueAsString(expectedResponseBody);
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(encodedExpectedResponse));
+    }
+    
+    @Test
+    public void testUnblockUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Bloquea al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/unblock/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNoContent());
+    }
+    
+    @Test
+    public void testUnblockUserAsOtherUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Bloquea al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/unblock/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(targetUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.PERMISSION_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testUnblockCurrentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Bloquea al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/unblock/%s", API_ENDPOINT, requestorUserID, requestorUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testUnblockNonExistentUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Bloquea al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/unblock/%s", API_ENDPOINT, requestorUserID, NON_EXISTENT_UUID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_NOT_FOUND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testUnblockNonBlockedUser_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/unblock/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(UserController.NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testUnblockUserTwice_POST() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto requestorUser = createAuthenticatedUser("Requestor");
+        String requestorUserID = requestorUser.getUserDTO().getUserID().toString();
+        AuthenticatedUserDto targetUser = createAuthenticatedUser("Target");
+        String targetUserID = targetUser.getUserDTO().getUserID().toString();
+        // Bloquea al usuario
+        userService.blockFriend(UUID.fromString(requestorUserID), UUID.fromString(targetUserID));
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/unblock/%s", API_ENDPOINT, requestorUserID, targetUserID);
+        ResultActions performAction = mockMvc.perform(
+                post(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(requestorUserID))
+        );
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isNoContent());
+    }
+    
+    @Test
+    public void testGetBlockedUsers_GET() throws Exception {
+        // Crear datos de prueba
+        final int AMMOUNT_OF_USERS = 2;
+        final int PAGE = 0;
+        final int PAGE_SIZE = 5;
+        AuthenticatedUserDto currentUser = createAuthenticatedUser("User");
+        String currentUserID = currentUser.getUserDTO().getUserID().toString();
+        List<User> targetUsersList = registerMultipleUsers(AMMOUNT_OF_USERS, this.userService);
+        // Bloquear a los usuarios
+        for (User target : targetUsersList ) {
+            userService.blockFriend(UUID.fromString(currentUserID), target.getUserID());
+        }
+        Block<User> blockedUsers = userService.getBlockedUsers(UUID.fromString(currentUserID), PAGE, PAGE_SIZE);
+    
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/blocked", API_ENDPOINT, currentUserID);
+        ResultActions performAction = mockMvc.perform(
+                get(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(currentUserID))
+        );
+        BlockDto<UserDto> expectedResponseBody = CommonConversor.toBlockDTO(blockedUsers, UserConversor::toUserDto);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testGetBlockedUsersWithPagination_GET() throws Exception {
+        // Crear datos de prueba
+        final int AMMOUNT_OF_USERS = 5;
+        final int PAGE = 0;
+        final int PAGE_SIZE = 3;
+        AuthenticatedUserDto currentUser = createAuthenticatedUser("User");
+        String currentUserID = currentUser.getUserDTO().getUserID().toString();
+        List<User> targetUsersList = registerMultipleUsers(AMMOUNT_OF_USERS, this.userService);
+        // Bloquear a los usuarios
+        for (User target : targetUsersList ) {
+            userService.blockFriend(UUID.fromString(currentUserID), target.getUserID());
+        }
+        Block<User> blockedUsers = userService.getBlockedUsers(UUID.fromString(currentUserID), PAGE, PAGE_SIZE);
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/blocked", API_ENDPOINT, currentUserID);
+        ResultActions performAction = mockMvc.perform(
+                get(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(currentUserID))
+                        .queryParam("page", String.valueOf(PAGE))
+                        .queryParam("pageSize", String.valueOf(PAGE_SIZE))
+        );
+        BlockDto<UserDto> expectedResponseBody = CommonConversor.toBlockDTO(blockedUsers, UserConversor::toUserDto);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testGetBlockedUsersWithouthHavingUsersBlocked_GET() throws Exception {
+        // Crear datos de prueba
+        final int AMMOUNT_OF_USERS = 0;
+        final int PAGE = 0;
+        final int PAGE_SIZE = 5;
+        AuthenticatedUserDto currentUser = createAuthenticatedUser("User");
+        String currentUserID = currentUser.getUserDTO().getUserID().toString();
+        List<User> targetUsersList = registerMultipleUsers(AMMOUNT_OF_USERS, this.userService);
+        // Bloquear a los usuarios
+        for (User target : targetUsersList ) {
+            userService.blockFriend(UUID.fromString(currentUserID), target.getUserID());
+        }
+        Block<User> blockedUsers = userService.getBlockedUsers(UUID.fromString(currentUserID), PAGE, PAGE_SIZE);
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/blocked", API_ENDPOINT, currentUserID);
+        ResultActions performAction = mockMvc.perform(
+                get(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(currentUserID))
+        );
+        BlockDto<UserDto> expectedResponseBody = CommonConversor.toBlockDTO(blockedUsers, UserConversor::toUserDto);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testGetBlockedUsersAsOtherUser_GET() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto currentUser = createAuthenticatedUser("User");
+        String currentUserID = currentUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/blocked", API_ENDPOINT, currentUserID);
+        ResultActions performAction = mockMvc.perform(
+                get(endpointAddress)
+                        .requestAttr("userID", UUID.randomUUID())
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.PERMISSION_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+    
+    @Test
+    public void testGetBlockedUsersFronNonExistentUser_GET() throws Exception {
+        // Crear datos de prueba
+        AuthenticatedUserDto currentUser = createAuthenticatedUser("User");
+        String currentUserID = currentUser.getUserDTO().getUserID().toString();
+        
+        // Ejecutar funcionalidades
+        String endpointAddress = String.format("%s/friends/%s/blocked", API_ENDPOINT, NON_EXISTENT_UUID);
+        ResultActions performAction = mockMvc.perform(
+                get(endpointAddress)
+                        .requestAttr("userID", UUID.fromString(currentUserID))
+        );
+        String errorMessage = getI18NExceptionMessage(CommonControllerAdvice.INSTANCE_NOT_FOUND_EXCEPTION_KEY, locale);
+        ErrorsDto expectedResponseBody = new ErrorsDto(errorMessage);
+        String expectedResponseBodyAsJSON = this.mapper.writeValueAsString(expectedResponseBody);
+        
+        
+        // Comprobar resultados
+        performAction
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseBodyAsJSON));
+    }
+
+
+
 }

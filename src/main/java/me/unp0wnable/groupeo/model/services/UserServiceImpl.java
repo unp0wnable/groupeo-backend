@@ -238,7 +238,7 @@ UserServiceImpl implements UserService {
         // Si no hay petición de amistad, ńo se puede denegar
         if (friendship == null) throw new NonExistentFriendshipException(requestorUserID, targetUserID);
     
-        // Cambiar el estado de la amistad a ACEPTADA por parte del usuario actual
+        // Cambiar el estado de la amistad a CANCELADA por parte del usuario actual
         Friendship updatedFriendship = updateFriendhipStatus(friendship, requestorUser, FriendshipStatusCodes.DECLINED);
     
         return friendshipRepository.save(updatedFriendship);

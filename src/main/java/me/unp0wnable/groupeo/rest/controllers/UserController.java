@@ -34,11 +34,11 @@ public class UserController {
     
     
     /* ********************************************* EXCEPTION HANDLERS ********************************************* */
-    private static final String INCORRECT_LOGIN_EXCEPTION_KEY                   = "project.exceptions.user.IncorrectLoginException";
-    private static final String INCORRECT_PASSWORD_EXCEPTION_KEY                = "project.exceptions.user.IncorrectPasswordException";
-    private static final String NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY           = "project.exceptions.user.NonExistentFriendshipException";
-    private static final String TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY     = "project.exceptions.user.TargetUserIsAlreadyFriendException";
-    private static final String USER_NOT_IN_GROUP_EXCEPTION_KEY                 = "project.exceptions.user.UserNotInGroupException";
+    public static final String INCORRECT_LOGIN_EXCEPTION_KEY                   = "project.exceptions.user.IncorrectLoginException";
+    public static final String INCORRECT_PASSWORD_EXCEPTION_KEY                = "project.exceptions.user.IncorrectPasswordException";
+    public static final String NON_EXISTENT_FRIENDSHIP_EXCEPTION_KEY           = "project.exceptions.user.NonExistentFriendshipException";
+    public static final String TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY     = "project.exceptions.user.TargetUserIsAlreadyFriendException";
+    public static final String USER_NOT_IN_GROUP_EXCEPTION_KEY                 = "project.exceptions.user.UserNotInGroupException";
     
     
     
@@ -307,8 +307,7 @@ public class UserController {
     public ResponseEntity<Void> unblockFriend(@RequestAttribute UUID userID,
                                               @PathVariable("requestorID") UUID requestorID,
                                               @PathVariable("targetID") UUID targetID)
-            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException,
-                   NonExistentFriendshipException {
+            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException, NonExistentFriendshipException {
         // Comprobar que el usuario actual es quién dice ser
         if (!doUsersMatch(userID, requestorID)) {
             throw new PermissionException();
@@ -325,8 +324,8 @@ public class UserController {
     @GetMapping("/friends/{requestorID}/blocked")
     public BlockDto<UserDto> getBlockedUsers(@RequestAttribute UUID userID,
                                              @PathVariable("requestorID") UUID requestorID,
-                                             @RequestParam(defaultValue = "0") int page,
-                                             @RequestParam(defaultValue = "10") int pageSize)
+                                             @RequestParam(name = "page", defaultValue = "0") int page,
+                                             @RequestParam(name = "pageSize", defaultValue = "10") int pageSize)
             throws PermissionException, InstanceNotFoundException {
         // Comprobar que el usuario actual es quién dice ser
         if (!doUsersMatch(userID, requestorID)) {
@@ -343,8 +342,8 @@ public class UserController {
     @GetMapping("/friends/{requestorID}")
     public BlockDto<UserDto> getUserFriends(@RequestAttribute UUID userID,
                                             @PathVariable("requestorID") UUID requestorID,
-                                            @RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "10") int pageSize)
+                                            @RequestParam(name = "page", defaultValue = "0") int page,
+                                            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize)
             throws PermissionException, InstanceNotFoundException {
         // Comprobar que el usuario actual es quién dice ser
         if (!doUsersMatch(userID, requestorID)) {
@@ -433,8 +432,8 @@ public class UserController {
     public BlockDto<UserDto> getFriendsFromGroup(@RequestAttribute UUID userID,
                                                  @PathVariable("userID") UUID pathUserID,
                                                  @PathVariable("groupID") UUID groupID,
-                                                 @RequestParam(defaultValue = "0") int page,
-                                                 @RequestParam(defaultValue = "10") int pageSize)
+                                                 @RequestParam(name = "page", defaultValue = "0") int page,
+                                                 @RequestParam(name = "pageSize", defaultValue = "10") int pageSize)
             throws PermissionException, InstanceNotFoundException {
         // Comprobar que el usuario actual es quién dice ser
         if (!doUsersMatch(userID, pathUserID)) {

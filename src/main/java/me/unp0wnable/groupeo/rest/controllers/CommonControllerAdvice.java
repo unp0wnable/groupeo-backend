@@ -17,12 +17,12 @@ public class CommonControllerAdvice {
     
     /* ********************************************* EXCEPTION HANDLERS *********************************************  */
     // Referencias a los errores en los ficheros de i18n
-    private static final String INSTANCE_ALREADY_EXISTS_EXCEPTION_KEY       = "project.exceptions.common.InstanceAlreadyExistsException";
-    private static final String INSTANCE_NOT_FOUND_EXCEPTION_KEY            = "project.exceptions.common.InstanceNotFoundException";
-    private static final String PERMISSION_EXCEPTION_KEY                    = "project.exceptions.common.PermissionException";
-    private static final String BLOCKED_USER_EXCEPTION_KEY                  = "project.exceptions.common.BlockdUserException";
-    private static final String TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY   = "project.exceptions.common.TargetUserIsCurrentUserException";
-    private static final String TARGET_USER_IS_NOT_FRIEND_EXCEPTION_KEY     = "project.exceptions.common.TargetUserIsNotFriendException";
+    public static final String INSTANCE_ALREADY_EXISTS_EXCEPTION_KEY       = "project.exceptions.common.InstanceAlreadyExistsException";
+    public static final String INSTANCE_NOT_FOUND_EXCEPTION_KEY            = "project.exceptions.common.InstanceNotFoundException";
+    public static final String PERMISSION_EXCEPTION_KEY                    = "project.exceptions.common.PermissionException";
+    public static final String BLOCKED_USER_EXCEPTION_KEY                  = "project.exceptions.common.BlockdUserException";
+    public static final String TARGET_USER_IS_CURRENT_USER_EXCEPTION_KEY   = "project.exceptions.common.TargetUserIsCurrentUserException";
+    public static final String TARGET_USER_IS_NOT_FRIEND_EXCEPTION_KEY     = "project.exceptions.common.TargetUserIsNotFriendException";
     
     
     @ExceptionHandler(InstanceAlreadyExistsException.class)

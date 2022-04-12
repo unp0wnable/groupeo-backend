@@ -51,9 +51,10 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
         // Consultas a realizar
         String selectQuery =
             "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status LIKE 'BLOCKED' ORDER BY f.id.targetID ASC";
-    
+        String usersSelectQuery =
+            "SELECT u FROM User u WHERE u.id IN (" + selectQuery + ")";
         // Construir consulta y substituir parámetros
-        Query query = createPaginatedQuery(selectQuery, pageable)
+        Query query = createPaginatedQuery(usersSelectQuery, pageable)
             .setParameter("userID", userID);
     
         // Ejecutar consulta y obtener resultados

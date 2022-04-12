@@ -53,9 +53,12 @@ public class UserConversor {
         dto.setRequesterID(friendship.getId().getRequesterID());
         dto.setTargetID(friendship.getId().getTargetID());
         dto.setSpecifierID(friendship.getSpecifier().getUserID());
-        dto.setGroupID(friendship.getGroup().getGroupID());
         dto.setStatus(friendship.getStatus().name());
         dto.setLastUpdate(friendship.getLastUpdate());
+        
+        // Valores que aceptan nulos
+        if (friendship.getGroup() != null)
+            dto.setGroupID(friendship.getGroup().getGroupID());
         
         return dto;
     }
