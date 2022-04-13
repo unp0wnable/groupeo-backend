@@ -1,9 +1,11 @@
 package me.unp0wnable.groupeo.utils;
 
 import lombok.experimental.UtilityClass;
+import me.unp0wnable.groupeo.model.constants.UserRoles;
+import me.unp0wnable.groupeo.model.entities.User;
 import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
+import me.unp0wnable.groupeo.model.exceptions.InstanceAlreadyExistsException;
+import me.unp0wnable.groupeo.model.services.UserService;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,33 +13,32 @@ import java.util.*;
 
 /** Clase con métodos auxiliares para la ejecución de los test */
 @UtilityClass
-public class TestGenerator {
+public class TestDataGenerator {
     // INFO: https://stackoverflow.com/questions/64580412/generate-valid-deterministic-uuids-for-tests
-    public static final UUID NON_EXISTENT_USER_ID = UUID.fromString("00000000-0000-4000-8000-000000000000");
-    public static final UUID NON_EXISTENT_ADDRESS_ID = UUID.fromString("00000001-0000-4000-8000-000000000000");
+    public static final UUID NON_EXISTENT_UUID = UUID.fromString("00000000-0000-4000-8000-000000000000");
     public static final String NON_EXISTENT_NICKNAME = "NON_EXISTENT_NICKNAME";
     public static final String DEFAULT_NICKNAME = "nickName";
     public static final String DEFAULT_PASSWORD = "password";
     
     
-    public static UserAddress generateValidAddressForUser(UserProfile user) {
+    public static UserAddress generateValidAddressForUser(User user) {
         UserAddress address = new UserAddress();
         address.setCity("A Coruña");
         address.setRegion("Galicia");
         address.setPostalCode("15000");
         address.setCountry("España");
-        address.setUserProfile(user);
+        address.setUser(user);
         
         return address;
     }
     
-    public static UserProfile generateValidUser(String nickName) {
-        UserProfile user = new UserProfile();
-        //user.setUserProfileID(UUID.fromString("00000001-0000-4000-8000-000000000001"));
+    public static User generateValidUser(String nickName) {
+        User user = new User();
+        //user.setUserID(UUID.fromString("00000001-0000-4000-8000-000000000001"));
         user.setFirstName("FirstName");
         user.setSurname1("Surname1");
         user.setSurname2("Surname2");
-        user.setEmail(nickName + "@groupeo.es");
+        user.setEmail(nickName.toLowerCase() + "@groupeo.es");
         user.setBirthDate(parseDate("2022-02-01"));
         user.setJoinDate(Calendar.getInstance().getTime());
         user.setDescription("A brief description of myself");
@@ -50,8 +51,8 @@ public class TestGenerator {
         return user;
     }
     
-    public static UserProfile generateAdmin() {
-        UserProfile admin = generateValidUser("ADMIN");
+    public static User generateAdmin() {
+        User admin = generateValidUser("ADMIN");
         admin.setJoinDate(parseDate("2022-02-02"));
         admin.setDescription("I am the administrator of the system");
         admin.setRole(UserRoles.ADMIN);
@@ -66,5 +67,22 @@ public class TestGenerator {
         } catch ( ParseException e) {
             return null;
         }
+    }
+    
+    public static User registerValidUser(String nickName, UserService service) throws InstanceAlreadyExistsException {
+        User user = generateValidUser(nickName);
+        
+        return service.signUp(user);
+    }
+    
+    public static List<User> registerMultipleUsers(int ammountOfUsers, UserService service) throws InstanceAlreadyExistsException {
+        List<User> listOfUsers = new ArrayList<>();
+        
+        for ( int i=1; i <= ammountOfUsers; i++ ) {
+            User auxUser = registerValidUser("Target" + i, service);
+            listOfUsers.add(auxUser);
+        }
+        
+        return listOfUsers;
     }
 }

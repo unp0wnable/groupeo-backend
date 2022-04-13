@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.unp0wnable</groupId>
 	<artifactId>groupeo</artifactId>
-	<version>0.1</version>
+	<version>0.2-SNAPSHOT</version>
 	<name>Groupeo-backend</name>
 	<description>Groupeo app backend built in Spring </description>
 	<url>https://github.com/unp0wnable/groupeo-backend</url>
@@ -114,13 +114,6 @@
             <artifactId>validation-api</artifactId>
         </dependency>
 
-		<dependency>
-			<groupId>com.github.spotbugs</groupId>
-			<artifactId>spotbugs-annotations</artifactId>
-			<version>4.5.3</version>
-			<scope>compile</scope>
-		</dependency>
-
     </dependencies>
 
 	<dependencyManagement>
@@ -184,7 +177,7 @@
 					<!-- attached to Maven test phase -->
 					<execution>
 						<id>report</id>
-						<phase>test</phase>
+						<phase>prepare-package</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>

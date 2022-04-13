@@ -1,13 +1,16 @@
 package me.unp0wnable.groupeo.model.entities;
 
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "UserAddress")
 public class UserAddress {
@@ -34,5 +37,5 @@ public class UserAddress {
             orphanRemoval = true,
             fetch = FetchType.LAZY)
     @JoinColumn(name = "userProfileID")
-    private UserProfile userProfile;
+    private User user;
 }

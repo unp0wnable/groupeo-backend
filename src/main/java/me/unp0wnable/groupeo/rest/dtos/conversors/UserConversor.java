@@ -1,29 +1,33 @@
 package me.unp0wnable.groupeo.rest.dtos.conversors;
 
 import lombok.experimental.UtilityClass;
-import me.unp0wnable.groupeo.model.entities.UserAddress;
-import me.unp0wnable.groupeo.model.entities.UserProfile;
-import me.unp0wnable.groupeo.model.entities.UserProfile.UserRoles;
+import me.unp0wnable.groupeo.model.constants.UserRoles;
+import me.unp0wnable.groupeo.model.entities.*;
 import me.unp0wnable.groupeo.rest.dtos.users.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class UserConversor {
     /* ******************** Convertir a DTO ******************** */
-    public static UserDto toUserDto(UserProfile user) {
-        UserDto dto = new UserDto();
-        dto.setUserID(user.getUserProfileID());
-        dto.setFirstName(user.getFirstName());
-        dto.setSurname1(user.getSurname1());
-        dto.setSurname2(user.getSurname2());
-        dto.setEmail(user.getEmail());
-        dto.setBirthDate(user.getBirthDate());
-        dto.setJoinDate(user.getJoinDate());
-        dto.setDescription(user.getDescription());
-        dto.setNickName(user.getNickName());
-        dto.setScore(user.getScore());
-        dto.setRole(user.getRole().toString());
-        dto.setImageB64(user.getImageB64());
-        
+    public static UserDto toUserDto(User user) {
+        UserDto dto = new UserDto(
+                user.getUserID(),
+                user.getFirstName(),
+                user.getSurname1(),
+                user.getSurname2(),
+                user.getEmail(),
+                user.getBirthDate(),
+                user.getJoinDate(),
+                user.getDescription(),
+                user.getNickName(),
+                user.getScore(),
+                user.getRole().toString()
+        );
+        dto.setPassword(user.getPassword());
+        // Agrega valores optativos si están disponibles
+        if (user.getImageB64() != null) dto.setImageB64(user.getImageB64());
         
         return dto;
     }
@@ -39,15 +43,45 @@ public class UserConversor {
         return dto;
     }
     
-    public static AuthenticatedUserDto toAuthenticatedUserDTO(UserProfile user, String token) {
+    public static AuthenticatedUserDto toAuthenticatedUserDTO(User user, String token) {
         return new AuthenticatedUserDto(token, toUserDto(user));
     }
     
-
-    /* ******************** Convertir a Entidades ******************** */
-    public static UserProfile fromUserDTO(UserDto dto) {
-        UserProfile user = new UserProfile();
-        user.setUserProfileID(dto.getUserID());
+    public static FriendshipDto toFriendshipDTO(Friendship friendship) {
+        FriendshipDto dto = new FriendshipDto();
+        dto.setRequesterID(friendship.getId().getRequesterID());
+        dto.setTargetID(friendship.getId().getTargetID());
+        dto.setSpecifierID(friendship.getSpecifier().getUserID());
+        dto.setStatus(friendship.getStatus().name());
+        dto.setLastUpdate(friendship.getLastUpdate());
+        
+        // Valores que aceptan nulos
+        if (friendship.getGroup() != null)
+            dto.setGroupID(friendship.getGroup().getGroupID());
+        
+        return dto;
+    }
+    
+    public static GroupDto toGroupDTO(Group group) {
+        GroupDto dto = new GroupDto();
+        dto.setGroupID(group.getGroupID());
+        dto.setCreatorID(group.getCreator().getUserID());
+        dto.setName(group.getName());
+        
+        return dto;
+    }
+    
+    /* ******************** Convertir a conjunto de DTO ******************** */
+    public static List<UserDto> toUserDtoList(List<User> userList) {
+        return userList.stream()
+                .map(UserConversor::toUserDto)
+                .collect(Collectors.toList());
+    }
+    
+    /* ******************** Convertir a Entidad ******************** */
+    public static User fromUserDTO(UserDto dto) {
+        User user = new User();
+        user.setUserID(dto.getUserID());
         user.setFirstName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());
@@ -64,8 +98,8 @@ public class UserConversor {
         return user;
     }
     
-    public static UserProfile fromSignUpParamsDTO(SignUpParamsDto dto) {
-        UserProfile user = new UserProfile();
+    public static User fromSignUpParamsDTO(SignUpParamsDto dto) {
+        User user = new User();
         user.setFirstName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());
@@ -79,8 +113,8 @@ public class UserConversor {
         return user;
     }
     
-    public static UserProfile fromUpdateProfileParamsDTO(UpdateProfileParamsDto dto) {
-        UserProfile user = new UserProfile();
+    public static User fromUpdateProfileParamsDTO(UpdateProfileParamsDto dto) {
+        User user = new User();
         user.setNickName(dto.getFirstName());
         user.setSurname1(dto.getSurname1());
         user.setSurname2(dto.getSurname2());
@@ -99,4 +133,12 @@ public class UserConversor {
         
         return address;
     }
+    
+    public static Group fromGroupDTO(GroupDto dto) {
+        Group group = new Group();
+        group.setName(dto.getName());
+        
+        return group;
+    }
+
 }

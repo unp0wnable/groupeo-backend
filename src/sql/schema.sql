@@ -2,9 +2,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";         -- Permite usar identificado
 
 /* ********************* DROP TABLES ********************* */
 DROP TABLE IF EXISTS FriendshipStatus;
-DROP TABLE IF EXISTS FriendshipStatusCode;
 DROP TABLE IF EXISTS Friendship;
-DROP TABLE IF EXISTS UserGroup;
+DROP TABLE IF EXISTS GroupTable;
 DROP TABLE IF EXISTS Assistance;
 DROP TABLE IF EXISTS AssistanceStatus;
 DROP TABLE IF EXISTS AssistanceStatusCode;
@@ -17,7 +16,7 @@ DROP TABLE IF EXISTS UserProfile;
 /* ******************** CREATE TABLES ******************** */
 /* *************** ACCOUNTS *************** */
 CREATE TABLE UserProfile (
-    userProfileID UUID          DEFAULT uuid_generate_v4(),
+    userID        UUID          DEFAULT uuid_generate_v1(),
     firstName     VARCHAR(30)   NOT NULL,
     surname1      VARCHAR(50),
     surname2      VARCHAR(50),
@@ -29,10 +28,10 @@ CREATE TABLE UserProfile (
     password      VARCHAR       NOT NULL,
     avatarPath    VARCHAR,                  -- Path to user profile picture
     score         FLOAT         NOT NULL DEFAULT 0.0,
-    role          SMALLINT      NOT NULL,
+    role          VARCHAR       NOT NULL,
     userAddressID UUID,
 
-    CONSTRAINT PK_UserProfile PRIMARY KEY (userProfileID),
+    CONSTRAINT PK_UserProfile PRIMARY KEY (userID),
     CONSTRAINT UNIQUE_UserProfile_email UNIQUE (email),
     CONSTRAINT UNIQUE_UserProfile_nickName UNIQUE (nickName)
 );
@@ -47,70 +46,50 @@ CREATE TABLE UserAddress (
 
     CONSTRAINT PK_UserAddress PRIMARY KEY (userAddressID),
     CONSTRAINT FK_UserAddress_TO_UserProfile FOREIGN KEY (userProfileID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
-CREATE TABLE UserGroup (
+CREATE TABLE GroupTable (
     groupID     UUID            DEFAULT uuid_generate_v4(),
     name        VARCHAR(20)     NOT NULL,
+    creatorID   uuid            NOT NULL,
 
-    CONSTRAINT PK_Group PRIMARY KEY (groupID)
+    CONSTRAINT PK_GroupTable PRIMARY KEY (groupID),
+    CONSTRAINT FK_GroupTable_TO_UserProfile FOREIGN KEY (creatorID)
+        REFERENCES UserProfile(userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
-CREATE TABLE Friendship (
-    requesterID     UUID,
-    targetID        UUID,
+CREATE TABLE Friendship(
+    requesterID     UUID,                                   -- User that requests the friendship
+    targetID        UUID,                                   -- User that receives the friendship
     groupID         UUID,
+    specifierID     UUID        NOT NULL,                   -- User who last updated the friendship
+    lastUpdate      timestamp   NOT NULL DEFAULT current_timestamp,
+    status          VARCHAR,
 
     CONSTRAINT PK_Friendship PRIMARY KEY (requesterID, targetID),
-    CONSTRAINT FK_Friendship_TO_UserGroup FOREIGN KEY (groupID)
-        REFERENCES UserGroup(groupID)
+    CONSTRAINT FK_Frienship_RequesterID_TO_UserProfile FOREIGN KEY (requesterID)
+        REFERENCES UserProfile(userID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+        CONSTRAINT FK_Frienship_TargetID_TO_UserProfile FOREIGN KEY (targetID)
+        REFERENCES UserProfile(userID)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
-    CONSTRAINT FK_Friendship_TO_UserProfile_Requester FOREIGN KEY (requesterID)
-        REFERENCES UserProfile(userProfileID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT FK_Friendship_TO_UserProfile_Target FOREIGN KEY (targetID)
-        REFERENCES UserProfile(userProfileID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE FriendshipStatusCode (
-    statusID    CHAR,
-    name        VARCHAR(20)     NOT NULL,
-
-    CONSTRAINT PK_FriendshipStatusCode PRIMARY KEY (statusID),
-    CONSTRAINT UNIQUE_FriendshipStatusCode_Name UNIQUE (name)
-);
-
-CREATE TABLE FriendshipStatus (
-    requesterID     UUID,
-    targetID        UUID,
-    lastUpdated     TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
-    specifierID     UUID            NOT NULL,
-    statusID        CHAR            NOT NULL,
-
-    CONSTRAINT PK_FriendshipStatus PRIMARY KEY (requesterID, targetID, lastUpdated),
-    CONSTRAINT FK_FriendshipStatus_TO_FriendshipStatusCode FOREIGN KEY (statusID)
-        REFERENCES FriendshipStatusCode(statusID)
+    CONSTRAINT FK_Frienship_TO_GroupTable FOREIGN KEY (groupID)
+        REFERENCES GroupTable(groupID)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
-    CONSTRAINT FK_Friendship_TO_UserProfile_Requester FOREIGN KEY (requesterID)
-        REFERENCES UserProfile(userProfileID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT FK_Friendship_TO_UserProfile_Target FOREIGN KEY (targetID)
-        REFERENCES UserProfile(userProfileID)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT FK_Friendship_TO_UserProfile_Specifier FOREIGN KEY (specifierID)
-        REFERENCES UserProfile(userProfileID)
-        ON DELETE CASCADE
+    CONSTRAINT FK_Friendship_SpecifierID_TO_UserProfile FOREIGN KEY (specifierID)
+        REFERENCES UserProfile(userID)
+        ON DELETE SET NULL
         ON UPDATE CASCADE
+    -- Restricción para identificar unívocamente las amistades entre usuarios --
+    --CONSTRAINT CHK_FriendshipPKIsUnequivocal CHECK (requesterID < targetID)
 );
 
 
@@ -154,7 +133,7 @@ CREATE TABLE Meeting (
 
     CONSTRAINT PK_Meeting PRIMARY KEY (meetingID),
     CONSTRAINT FK_Meeting_TO_UserProfile FOREIGN KEY (creatorID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE SET NULL
         ON UPDATE CASCADE,
     CONSTRAINT FK_Meeting_TO_Place FOREIGN KEY (placeID)
@@ -171,11 +150,11 @@ CREATE TABLE Assistance (
 
     CONSTRAINT PK_Assistance PRIMARY KEY (invitingUserID, invitedUserID, meetingID),
     CONSTRAINT FK_Assistance_TO_UserProfile_Inviting FOREIGN KEY (invitingUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT FK_Assistance_TO_UserProfile_Invited FOREIGN KEY (invitingUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT FK_Assistance_TO_Meeting FOREIGN KEY (meetingID)
@@ -204,30 +183,14 @@ CREATE TABLE AssistanceStatus (
         ON DELETE SET NULL
         ON UPDATE CASCADE,
     CONSTRAINT FK_Friendship_TO_UserProfile_Inviting FOREIGN KEY (invitingUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT FK_Friendship_TO_UserProfile_Invited FOREIGN KEY (invitedUserID)
-        REFERENCES UserProfile(userProfileID)
+        REFERENCES UserProfile(userID)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
 
 
 /* *************** MESSAGES *************** */
-/*
-CREATE TABLE MessageStatusCode (
-    statusID    CHAR,
-    name        VARCHAR(20)     NOT NULL,
-
-    CONSTRAINT PK_MessageStatusCode PRIMARY KEY (statusID),
-    CONSTRAINT UNIQUE_MessageStatusCode_Name UNIQUE (name)
-);
-
-CREATE TABLE PrivateMessage (
-    messageID       UUID,
-    authorID        UUID    NOT NULL,
-    creationDate    TIMESTAMP   NOT NULL,
-    text            TEXT    NOT NULL,
-    conversationID  UUID    NOT NULL,
-) */

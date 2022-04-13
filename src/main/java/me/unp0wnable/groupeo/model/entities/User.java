@@ -1,6 +1,7 @@
 package me.unp0wnable.groupeo.model.entities;
 
-import lombok.Data;
+import lombok.*;
+import me.unp0wnable.groupeo.model.constants.UserRoles;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -8,19 +9,19 @@ import javax.persistence.*;
 import java.util.Date;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "UserProfile")
-public class UserProfile {
-    public enum UserRoles {ADMIN, USER}
-    
-    
+public class User {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(generator = "postgresql-uuid-generator")
+    @GenericGenerator(name = "postgresql-uuid-generator", strategy = "org.hibernate.id.UUIDGenerator")
     @Type(type = "org.hibernate.type.PostgresUUIDType")
-    @Column(name = "userProfileID", nullable = false)
-    private UUID userProfileID;
+    @Column(name = "userID", nullable = false)
+    private UUID userID;
     
     @Column(name = "firstName", length = 30, nullable = false)
     private String firstName;
@@ -57,12 +58,15 @@ public class UserProfile {
     @Column(name = "score")
     private Float score;
     
+    @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private UserRoles role;
     
-    @OneToOne(mappedBy = "userProfile",
+    @OneToOne(mappedBy = "user",
             fetch = FetchType.LAZY,
             cascade = CascadeType.PERSIST,
             orphanRemoval = true)
     private UserAddress address;
+    
+    
 }

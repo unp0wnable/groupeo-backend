@@ -15,8 +15,8 @@ spring:
       trigger-file: reload
     livereload:
       enabled: true
-  jackson:
-    default-property-inclusion: NON_NULL
+  # jackson:
+    #default-property-inclusion: NON_NULL
   jpa:
     database: POSTGRESQL
     show-sql: false
@@ -38,3 +38,4 @@ project:
   jwt:
     signKey: Bu:GW8bgPlEw
     expirationMinutes: 15   # Short time to avoid security issues in case of JWT leaking
+

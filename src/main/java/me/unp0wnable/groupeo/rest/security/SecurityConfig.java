@@ -28,14 +28,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilter(jwtAuthFilter).authorizeRequests()
                 // ACCOUNTS ENDPOINTS
-                .antMatchers(HttpMethod.POST,   "/api/users/signUp").permitAll()                    // signUp
-                .antMatchers(HttpMethod.POST,   "/api//users/login").permitAll()                     // login
-                .antMatchers(HttpMethod.POST,   "/api//users/tokenLogin").permitAll()                // loginFromServiceToken
-                .antMatchers(HttpMethod.POST,   "/api//users/*/changePassword").permitAll()          // changePassword
-                .antMatchers(HttpMethod.PUT,    "/api//users/*/update").permitAll()                  // updateUserProfile
-                .antMatchers(HttpMethod.POST,    "/api//users/*/address").permitAll()                // assignAddressToUser
-                .antMatchers(HttpMethod.PUT,    "/api//users/*/address").permitAll()                 // updateUserAddress
-                .antMatchers(HttpMethod.DELETE, "/api//users/*").permitAll()                         // deleteUser
+                .antMatchers(HttpMethod.POST,   "/users/signUp").permitAll()                                 // signUp
+                .antMatchers(HttpMethod.POST,   "/users/login").permitAll()                                  // login
+                .antMatchers(HttpMethod.POST,   "/users/tokenLogin").permitAll()                             // loginFromServiceToken
+                .antMatchers(HttpMethod.POST,   "/users/*/changePassword").permitAll()                       // changePassword
+                .antMatchers(HttpMethod.PUT,    "/users/*").permitAll()                                      // updateUserProfile
+                .antMatchers(HttpMethod.POST,    "/users/*/address").permitAll()                             // assignAddressToUser
+                .antMatchers(HttpMethod.PUT,    "/users/*/address").permitAll()                              // updateUserAddress
+                .antMatchers(HttpMethod.DELETE, "/users/*").permitAll()                                      // deleteUser
+                .antMatchers(HttpMethod.POST,   "/friends/*/add/*").permitAll()                              // requestFriendship
+                // FRIENDSHIPS ENDPOINTS
+                .antMatchers(HttpMethod.GET, "/users/friends/*").permitAll()                                 // getUserFriends
+                .antMatchers(HttpMethod.POST, "/users/friends/*/accept/*").permitAll()                       // acceptFriend
+                .antMatchers(HttpMethod.POST, "/users/friends/*/add/*").permitAll()                          // requestFriendship
+                .antMatchers(HttpMethod.POST, "/users/friends/*/block/*").permitAll()                        // blockFriend
+                .antMatchers(HttpMethod.GET, "/users/friends/*/blocked").permitAll()                         // getBlockedUsers
+                .antMatchers(HttpMethod.POST, "/users/friends/*/declne/*").permitAll()                       // declineFriendship
+                .antMatchers(HttpMethod.POST, "/users/friends/*/friendship/*").permitAll()                   // getFriendshipDataBetweenUsers
+                .antMatchers(HttpMethod.DELETE, "/users/friends/*/remove/*").permitAll()                     // removeFriend
+                .antMatchers(HttpMethod.POST, "/users/friends/*/unblock/*").permitAll()                      // unblockFriend
+                // GROUPS ENDPOINTS
+                .antMatchers(HttpMethod.POST, "/users/friends/*/groups/").permitAll()                        // createGroup
+                .antMatchers(HttpMethod.PUT, "/users/friends/*/groups/*").permitAll()                        // updateGroup
+                .antMatchers(HttpMethod.DELETE, "/users/friends/*/groups/*").permitAll()                     // deleteGroup
+                .antMatchers(HttpMethod.POST, "/users/friends/*/groups/*/add/*").permitAll()                 // addUserToGroup
+                .antMatchers(HttpMethod.GET, "/users/friends/*/groups/*/people").permitAll()                 // getFriendsFromGroup
+                .antMatchers(HttpMethod.DELETE, "/users/friends/*/groups/*/remove/*").permitAll()            // removeUserFromGroup
                 // EVENTS ENDPOINTS
                 
                 // DENY ALL UNAUTHORIZED REQUESTS
