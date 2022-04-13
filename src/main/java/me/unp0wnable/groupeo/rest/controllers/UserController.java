@@ -361,7 +361,8 @@ public class UserController {
     public FriendshipDto getFriendshipDataBetweenUsers(@RequestAttribute UUID userID,
                                                        @PathVariable("requestorID") UUID requestorID,
                                                        @PathVariable("targetID") UUID targetID)
-            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException {
+            throws PermissionException, TargetUserIsCurrentUserException, InstanceNotFoundException,
+                   NonExistentFriendshipException {
         // Comprobar que el usuario actual es quién dice ser
         if (!doUsersMatch(userID, requestorID)) {
             throw new PermissionException();

@@ -53,7 +53,8 @@ public interface UserService {
     Block<User> getUserFriends(UUID userID, int page, int pageSize) throws InstanceNotFoundException;
     
     Friendship getFriendshipInfoWithUser(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException,
-                                                                                         TargetUserIsCurrentUserException;
+                                                                                         TargetUserIsCurrentUserException,
+                                                                                         NonExistentFriendshipException;
     
     Group createGroup(UUID ownerID, String name) throws InstanceAlreadyExistsException, InstanceNotFoundException;
     

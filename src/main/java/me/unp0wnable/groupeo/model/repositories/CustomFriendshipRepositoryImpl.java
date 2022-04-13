@@ -18,9 +18,11 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
         // Obtener usuarios que son amigos del usuario actual
         String selectQuery =
             "SELECT f.id.targetID FROM Friendship f WHERE (f.id.requesterID = :userID OR f.id.targetID = :userID) AND f.status = :acceptedStatus ORDER BY f.id.targetID ASC";
-    
+        String usersSelectQuery =
+                "SELECT u FROM User u WHERE u.id IN (" + selectQuery + ")";
+        
         // Construir consulta y substituir parámetros
-        Query query = createPaginatedQuery(selectQuery, pageable)
+        Query query = createPaginatedQuery(usersSelectQuery, pageable)
                 .setParameter("userID", userID)
                 .setParameter("acceptedStatus", FriendshipStatusCodes.ACCEPTED);
         
@@ -34,10 +36,13 @@ public class CustomFriendshipRepositoryImpl implements CustomFriendshipRepositor
     public Slice<User> getFriendsByGroup(UUID groupID, Pageable pageable) {
         // Consultas a realizar
         String selectQuery =
-            "SELECT f.group.groupID, f.id.targetID FROM Friendship f GROUP BY f.group.groupID, f.id.targetID HAVING f.group.groupID = :groupID ORDER BY f.id.targetID ASC";
+            //"SELECT f.group.groupID, f.id.targetID FROM Friendship f GROUP BY f.group.groupID, f.id.targetID HAVING f.group.groupID = :groupID ORDER BY f.id.targetID ASC";
+            "SELECT f.id.targetID FROM Friendship f WHERE f.group.groupID = :groupID ORDER BY f.id.targetID ASC";
+        String usersSelectQuery =
+                "SELECT u FROM User u WHERE u.id IN (" + selectQuery + ")";
         
         // Construir consulta y substituir parámetros
-        Query query = createPaginatedQuery(selectQuery, pageable)
+        Query query = createPaginatedQuery(usersSelectQuery, pageable)
             .setParameter("groupID", groupID);
     
         // Ejecutar consulta y obtener resultados

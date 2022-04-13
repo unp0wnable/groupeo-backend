@@ -322,7 +322,8 @@ UserServiceImpl implements UserService {
     }
     
     @Override
-    public Friendship getFriendshipInfoWithUser(UUID requestorUserID, UUID targetUserID) throws InstanceNotFoundException, TargetUserIsCurrentUserException {
+    public Friendship getFriendshipInfoWithUser(UUID requestorUserID, UUID targetUserID)
+            throws InstanceNotFoundException, TargetUserIsCurrentUserException, NonExistentFriendshipException {
         // Comprobar que el usuario actual y el objetivo no sean el mismo
         if (requestorUserID.equals(targetUserID)) throw new TargetUserIsCurrentUserException();
     
@@ -330,6 +331,8 @@ UserServiceImpl implements UserService {
         User requestorUser = fetchUser(requestorUserID);
         User targetUser = fetchUser(targetUserID);
         Friendship friendship = getFriendshipBetweenUsers(requestorUser, targetUser);
+        if (friendship == null)
+            throw new NonExistentFriendshipException(requestorUserID, targetUserID);
         
         return friendship;
     }
