@@ -1,5 +1,6 @@
 package me.unp0wnable.groupeo.rest.dtos.users;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import javax.validation.constraints.Size;
@@ -24,6 +25,7 @@ public class UserDto {
     @Size(min = 1, max = 100)
     private String email;
     
+    @JsonFormat(pattern="yyyy-MM-dd")
     private Date birthDate;
     
     private Date joinDate;

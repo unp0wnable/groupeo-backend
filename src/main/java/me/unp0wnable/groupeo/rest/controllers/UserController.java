@@ -40,8 +40,6 @@ public class UserController {
     public static final String TARGET_USER_IS_ALREADY_FRIEND_EXCEPTION_KEY     = "project.exceptions.user.TargetUserIsAlreadyFriendException";
     public static final String USER_NOT_IN_GROUP_EXCEPTION_KEY                 = "project.exceptions.user.UserNotInGroupException";
     
-    
-    
     @ExceptionHandler(IncorrectLoginException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
@@ -128,21 +126,21 @@ public class UserController {
         User user = userService.login(params.getNickName(), params.getPassword());
         
         // Genera el token para el usuario
-        String token = generateServiceTokenForUser(user);
+        String serviceToken = generateServiceTokenForUser(user);
         
         // Crea la respuesta y la envía
-        return UserConversor.toAuthenticatedUserDTO(user, token);
+        return UserConversor.toAuthenticatedUserDTO(user, serviceToken);
     }
     
     
     @PostMapping("/tokenLogin")
-    public AuthenticatedUserDto loginUsingServiceToken(@RequestAttribute UUID userID, @RequestAttribute String token)
+    public AuthenticatedUserDto loginUsingServiceToken(@RequestAttribute UUID userID, @RequestAttribute String serviceToken)
             throws InstanceNotFoundException {
         // Inicia sesión en el servicio
         User user = userService.loginFromServiceToken(userID);
         
         // Devuelve los datos del usuario junto al token recibido
-        return UserConversor.toAuthenticatedUserDTO(user, token);
+        return UserConversor.toAuthenticatedUserDTO(user, serviceToken);
     }
     
     

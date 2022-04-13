@@ -1,5 +1,5 @@
 # Acción para escanear la calidad del código
-name: Sonar code quality scanning
+name: Quality Assurance.
 on:
   # Al pushear a ramas relevantes (desarrollo, despliegue y rama principal)
   push:
@@ -14,30 +14,32 @@ on:
       - opened
 jobs:
   # Analizar el código en los servidores de SonarCloud
-  build:
-    name: Build
+  analyze:
+    name: Scan code quality through SonarCloud.
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      # Permisos para manipular repositorio
+      - name: Checkout code.
+        uses: actions/checkout@v2
         with:
-          fetch-depth : 0   # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth : 0
 
-      # Configurar JAVA 11 en la máquina
-      - name: Set up JDK 11
+      # Configurar JAVA 11 en la máquina de referencia
+      - name: Set up JDK 11.
         uses: actions/setup-java@v1
         with:
           java-version: 11
 
       # Copiar código a la caché de SonarCloud
-      - name: Cache SonarCloud packages
+      - name: Cache SonarCloud packages.
         uses: actions/cache@v1
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os}}-sonar
 
-      # Obtener dependencias de Maven
-      - name: Cache Maven packages
+      # Cachear dependencias de Maven
+      - name: Cache Maven packages.
         uses: actions/cache@v1
         with:
           path: ~/.m2
@@ -45,8 +47,8 @@ jobs:
           restore-keys: ${{ runner.os }}
 
       # Compilar código y analizarlo
-      - name: Build and analyze code
+      - name: Build and analyze code.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Needed to get PR info, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # Needed to get PR data, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=unp0wnable_groupeo-backend -P prod
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=unp0wnable_groupeo-backend -Ptest

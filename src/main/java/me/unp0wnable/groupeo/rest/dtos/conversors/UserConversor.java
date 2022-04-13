@@ -29,7 +29,6 @@ public class UserConversor {
         // Agrega valores optativos si están disponibles
         if (user.getImageB64() != null) dto.setImageB64(user.getImageB64());
         
-        
         return dto;
     }
     

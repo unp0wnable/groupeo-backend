@@ -41,5 +41,5 @@ dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
 
-!/src/test/resources/application-test.yml
-!/src/main/resources/application-dev.yml
+#!/src/test/resources/application-test.yml
+#!/src/main/resources/application-dev.yml
